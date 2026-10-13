@@ -1,90 +1,61 @@
-# 尾部风险复现 · Notebook 版
+# 尾部风险：研报复现与方法检验
 
-## 文件
+本项目复现国内外关于尾部风险识别、资产配置与预警的研究，并检验每篇研究的核心结论：
+它测到的是信号，还是噪声？
 
-| 文件 | 内容 |
-|---|---|
-| `tailrisk_core.py` | 核心数学：Copula 估计、PIT、同花顺导出解析、噪声基准 |
-| `01_L0_L2_数据与尾部相关性.ipynb` | 数据提取 → 质量体检 → 边缘分布 → 滚动尾部相关系数 |
-| `02_中金_股债双杀预警复现.ipynb` | 趋势条件 → 预警状态机 → 情景对照表 → 回测 |
-| `data/` | 放同花顺导出的 txt（制表符分隔） |
-| `output/` | 结果导出 |
+各篇复现共用一套核心库 `tailrisk/`，每篇研究放在 `studies/` 下的独立目录，
+目录里的 README 按固定格式写明：原文结论 → 口径差异 → 复现结果 → 判定。
 
-## 环境
+## 研究进度
+
+| 目录 | 研究 | 状态 | 判定 |
+|---|---|---|---|
+| `studies/01_single_asset_tail/` | 单资产肥尾、GPD、ES/VaR | 计划中 | |
+| [`studies/02_tail_dependence/`](studies/02_tail_dependence/) | 尾部相关性：数据、PIT、Copula、噪声基准 | ✅ | 方法基础设施 |
+| [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债部分 | **部分复现，核心证据不成立** |
+| `studies/04_cib_single_asset_warning/` | 兴业（2025）单资产尾部预警 | 计划中 | |
+| `studies/05_nesc_hierarchical_es/` | 东北（2025）分层聚类组合 ES | 计划中 | |
+| `studies/06_gtja_kde_simulation/` | 国泰君安 KDE + Cholesky 模拟配置 | 计划中 | |
+| `studies/07_tail_risk_parity/` | 尾部风险平价（历史 ETL 版） | 计划中 | |
+
+## 目录结构
+
+```
+tailrisk/          核心库
+  data.py            取数（中债官网 / AkShare / 聚宽）、缓存、同花顺导出解析、质量体检
+  marginals.py       边缘分布与 PIT
+  copula.py          Clayton / Gumbel / Gaussian、滚动尾部相关、噪声基准
+  signals.py         趋势、预警状态机、事件核对
+  backtest.py        日频回测、风险平价、绩效统计
+studies/           各篇复现，每篇一个目录（notebook + README）
+tests/             回归测试
+data/cache/        本地数据缓存（不入库）
+```
+
+## 快速开始
 
 ```bash
-pip install numpy pandas scipy arch matplotlib jupyter jqdatasdk
+pip install -e ".[dev,garch]"
+pytest -q
+jupyter notebook studies/03_cicc_stock_bond_warning/stock_bond_warning.ipynb
 ```
 
-`arch` 只被 `pit_garch()` 用到，且是函数内 import，装不上也不影响其余部分
-（主口径 `pit_empirical` 才是贴合中金原文的做法）。
+数据首次运行时自动下载，缓存在 `data/cache/`。中债指数直接请求中国债券信息网，
+股票指数经 AkShare 取自新浪，**都不需要账号**。
+聚宽是备选来源，用法见 `credentials_example.py`：复制为 `credentials.py` 后填写，该文件已加入 gitignore。
 
-## 聚宽凭据
+**数据不入库**：中债、聚宽、万得的数据都不允许再分发，仓库里只提交取数代码。
 
-三种方式任选，notebook 会按 环境变量 → credentials.py → 交互输入 依次尝试。
+## 贯穿全项目的方法结论
 
-**方式一：credentials.py（推荐，与启动方式无关）**
-
-```bash
-cp credentials_example.py credentials.py   # 然后填入账号密码
-```
-
-已在 .gitignore 中，不会进版本库。
-
-**方式二：环境变量**
-
-```bash
-export JQ_USERNAME=... JQ_PASSWORD=...
-jupyter notebook          # 必须从这个终端启动
-```
-
-⚠ 只对**从该终端启动**的进程有效。从 Dock/Spotlight 点开的 VS Code
-拿不到，其内核也拿不到；若要用 VS Code，需 `code .` 从终端启动。
-
-**方式三**：什么都不配置，运行时会提示输入，密码不回显。
-
-## 常见问题
-
-**包装了却报 ModuleNotFoundError** —— VS Code 的内核和 pip 装包的 Python
-不是同一个。在 notebook 里跑 `import sys; print(sys.executable)` 确认，
-然后用 `!{sys.executable} -m pip install ...` 装到当前内核对应的环境。
-
-**图表中文显示成方框** —— 跑下面这段看系统有哪些中文字体，
-把结果填进 notebook 第 0 格的字体列表：
-
-```python
-from matplotlib import font_manager
-print([f.name for f in font_manager.fontManager.ttflist
-       if any(k in f.name for k in ["Hei", "PingFang", "Song", "Kai"])])
-```
-
-## 结构约定
-
-每个 notebook 都是**先提取数据落成 DataFrame，确认无误再往下算**。
-核心数学放在 `tailrisk_core.py`（Copula 参数边界和独立性检验踩过坑，
-有回归测试背书，不在 notebook 里重写）。
-
-## 换债券标的
-
-`02` 第 0 节改 `BOND` 一行即可，其余代码不动：
-
-- `上证国债指数`（2005–今，纯国债）
-- `上证企业债指数`（2005–2020，含信用，ties 最干净）
-- `中债综合财富指数`（2021–今，口径最贴原文但只有 5 年）
-
-## 已知的方法局限
-
-**λ_U 判零条件。** 独立性检验的原假设是「独立」而非「无上尾相关」。
-模拟显示：即使数据是纯 Clayton（真实 λ_U 严格为 0），Gumbel 仍在 100%
-的窗口报出 λ_U>0。相关性较高时中金的「λ_U=0」可能永不成立。
-备选判定 `ll_diff = ll_Clayton − ll_Gumbel` 已一并输出。
-
-**GARCH 滤波。** 会剥离波动率联动，而危机期股债同步暴跌很大程度就表现为
-两者波动率同时放大。主口径用 `pit_empirical`（贴合原文），
-`pit_garch` 作为对照版本并排出结果。
+1. **噪声基准必须匹配相关强度。** Clayton/Gumbel 的 λ>0 主要反映窗口内是否正相关，
+   与有没有尾部相关关系不大。所以对照基准要用「相关强度相同、尾部相关为 0」的高斯 copula
+   （`copula.expected_under_gaussian`），只和独立数据比是不够的。
+2. **边缘分布只用窗口内的数据。** 全样本 PIT 有前视偏差，还会把波动率聚集误判成尾部相关。
+3. **判零口径要写清楚。** 点估计判零和 LR 检验判零的结论差别很大，两种都要报告。
 
 ## 纪律
 
-- 任何「测出了信号」的结论必须对照噪声基准（`tc.noise_baseline`）
-- 所有滚动分位数用扩展窗口或 shift(1)，避免前视偏差
-- 不得调参数直到情景③变负
+- 凡是「测出了信号」的结论，都必须对照噪声基准
+- 所有滚动统计只能用截至当日的数据；信号在 t 日收盘后确定，最早在 t+1 日交易
+- 不为了对上原文去调参数。原文没写清的地方，在 README 的口径差异表里列出，并做稳健性检验

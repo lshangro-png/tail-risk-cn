@@ -1,0 +1,220 @@
+"""
+数据层：取数、本地缓存、导出文件解析、质量体检。
+
+主数据源免账号：中债指数直接请求中国债券信息网，沪深300 等经 AkShare 取自新浪，
+均可回溯到 2002 年，覆盖中金原文的全部样本期。
+聚宽作为备选，需要账号（见 credentials_example.py）。
+
+⚠ 取到的数据只缓存在 data/cache/（已 gitignore），不得提交到版本库：
+  中债、聚宽、万得的数据都不允许再分发，仓库里只放取数代码。
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+CACHE_DIR = PROJECT_ROOT / "data" / "cache"
+
+# 名称 → (来源, 参数)。新增标的只需在这里加一行。
+SERIES = {
+    "沪深300":         ("ak_index", "sh000300"),
+    "中证500":         ("ak_index", "sh000905"),
+    "上证国债指数":     ("ak_index", "sh000012"),
+    "上证企业债指数":   ("ak_index", "sh000013"),
+    "中债综合财富":     ("chinabond", "2c90818811afed8d0111c0c672b31578"),  # 中金原文所用
+    "中债新综合财富":   ("chinabond", "8a8b2ca0332abed20134ea76d8885831"),
+    "黄金Au9999":      ("ak_sge", "Au99.99"),
+}
+
+
+_CHINABOND_URL = "https://yield.chinabond.com.cn/cbweb-mn/indices/singleIndexQuery"
+
+
+def _fetch_chinabond(index_id):
+    """
+    中国债券信息网单指数查询（财富指数、总值）。
+
+    不用 AkShare 的 bond_composite_index_cbond：它把毫秒时间戳按 UTC 转日期，
+    北京时间零点变成前一天，整条序列错位一天（与股票收益的相关性因此被打乱）。
+    这里按 Asia/Shanghai 转换。
+    """
+    import requests
+
+    params = {"indexid": index_id, "qxlxt": "00", "zslxt": "CFZS", "lx": "1", "locale": ""}
+    js = requests.post(_CHINABOND_URL, params=params, timeout=30).json()["CFZS_00"]
+    ts = pd.to_datetime(pd.Index(js.keys()).astype(float), unit="ms", utc=True)
+    idx = ts.tz_convert("Asia/Shanghai").tz_localize(None).normalize()
+    return pd.Series(pd.to_numeric(list(js.values()), errors="coerce"), index=idx)
+
+
+def _fetch(source, arg):
+    if source == "chinabond":
+        return _fetch_chinabond(arg)
+
+    import akshare as ak
+
+    if source == "ak_index":
+        df = ak.stock_zh_index_daily(symbol=arg)
+        return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    if source == "ak_sge":
+        df = ak.spot_hist_sge(symbol=arg)
+        return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    raise ValueError(f"未知数据源 {source}")
+
+
+def load_series(name, refresh=False):
+    """
+    按名称取一条日频价格序列（收盘价 / 财富指数值），优先读本地缓存。
+
+    缓存为 data/cache/<名称>.csv。refresh=True 时强制重新下载。
+    """
+    if name not in SERIES:
+        raise KeyError(f"{name} 不在 SERIES 中，可选：{list(SERIES)}")
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    path = CACHE_DIR / f"{name}.csv"
+    if path.exists() and not refresh:
+        s = pd.read_csv(path, index_col=0, parse_dates=True).iloc[:, 0]
+    else:
+        s = _fetch(*SERIES[name]).sort_index()
+        s = s[~s.index.duplicated(keep="last")].astype(float)
+        s.to_frame(name).to_csv(path)
+    s.name = name
+    return s.dropna()
+
+
+def load_prices(names, start=None, end=None, how="inner", refresh=False):
+    """
+    取多条序列并按日期对齐。默认 inner：只保留共同交易日。
+
+    不做前向填充 —— 填充会制造零收益（ties），让 Copula 的 MLE 偏向独立解。
+    """
+    df = pd.concat([load_series(n, refresh=refresh) for n in names], axis=1, join=how)
+    return df.loc[start:end].sort_index()
+
+
+def to_returns(prices):
+    """
+    简单收益率。显式 fill_method=None：pandas 的 pct_change 默认会对 NaN
+    做前向填充，缺失日变成 0 收益、下一日跨缺口计收益，恰好制造 ties。
+    """
+    return prices.pct_change(fill_method=None).dropna(how="all")
+
+
+# ══════════════════════════════════════════════════════════════════
+# 聚宽（备选来源，需账号）
+# ══════════════════════════════════════════════════════════════════
+
+def jq_login():
+    """
+    聚宽登录，三级回退：环境变量 → credentials.py → 交互输入。
+
+    终端里 export 的变量只有从该终端启动的进程才继承得到；
+    从 Dock/Spotlight 打开的 VS Code 及其内核拿不到，所以需要回退。
+    """
+    import jqdatasdk as jq
+
+    u, p = os.environ.get("JQ_USERNAME"), os.environ.get("JQ_PASSWORD")
+    src = "环境变量"
+    if not (u and p):
+        try:
+            import credentials
+            u, p = credentials.JQ_USERNAME, credentials.JQ_PASSWORD
+            src = "credentials.py"
+        except (ImportError, AttributeError):
+            from getpass import getpass
+            u, p = input("聚宽账号: "), getpass("密码: ")
+            src = "交互输入"
+    jq.auth(u, p)
+    print(f"聚宽登录成功（凭据来自{src}）")
+    return jq
+
+
+# ══════════════════════════════════════════════════════════════════
+# 同花顺导出解析
+# ══════════════════════════════════════════════════════════════════
+
+def parse_ifind_export(path, encoding="utf-8"):
+    """
+    解析同花顺 Excel/CSV 导出的**多标的横向拼接**格式。
+
+    该格式每个标的占 3 列（日期 / 数值 / 空列），且**各标的的日期列相互独立**
+    （不同市场交易日不同，不能假设行对齐）。因此必须逐标的取出
+    (日期, 数值) 配对，再按日期外连接，不能直接按行号拼。
+
+    返回：DataFrame，index=日期，每列一个标的，列名为「中文名(代码)」
+    """
+    with open(path, encoding=encoding) as f:
+        lines = f.read().split("\n")
+
+    names, codes = lines[0].split("\t"), lines[1].split("\t")
+    body = [l for l in lines[3:] if l.strip()]
+    n_inst = len(names) // 3 + (1 if len(names) % 3 else 0)
+
+    out = {}
+    for i in range(n_inst):
+        dcol, vcol = 3 * i, 3 * i + 1
+        if dcol >= len(codes):
+            break
+        code = codes[dcol].strip()
+        name = names[vcol].strip() if vcol < len(names) else ""
+        if not code:
+            continue
+        dates, vals = [], []
+        for line in body:
+            cells = line.split("\t")
+            if vcol >= len(cells):
+                continue
+            d, v = cells[dcol].strip(), cells[vcol].strip().replace(",", "")
+            if not d or not v:
+                continue
+            try:
+                vals.append(float(v))
+                dates.append(pd.Timestamp(d))
+            except ValueError:
+                continue
+        if dates:
+            out[f"{name}({code})"] = pd.Series(vals, index=dates)
+
+    if not out:
+        return pd.DataFrame()
+    return pd.concat(out.values(), axis=1, keys=out.keys()).sort_index()
+
+
+# ══════════════════════════════════════════════════════════════════
+# 质量体检
+# ══════════════════════════════════════════════════════════════════
+
+def data_quality(df):
+    """
+    数据质量体检。返回 DataFrame，一行一个标的。
+
+    关注 ties（零收益率、重复值）：PIT 建立在经验分布上，大量重复值会让
+    多个观测映射到同一分位，Copula 的似然曲面趋于平坦，MLE 系统性偏向
+    独立解 —— 表现为 lambda 恒为 0，与「真的没有尾部相关」无法区分。
+    """
+    rows = []
+    for c in df.columns:
+        s = df[c].dropna()
+        if len(s) < 3:
+            rows.append({"标的": c, "样本数": len(s), "可用": False})
+            continue
+        r = s.pct_change().dropna()
+        n_zero = int((r.abs() < 1e-10).sum())
+        rows.append({
+            "标的": c,
+            "样本数": len(s),
+            "起点": s.index.min().date(),
+            "终点": s.index.max().date(),
+            "年化收益": (s.iloc[-1] / s.iloc[0]) ** (365.25 / (s.index[-1] - s.index[0]).days) - 1,
+            "年化波动": r.std() * np.sqrt(244),
+            "最大回撤": (s / s.cummax() - 1).min(),
+            "零收益占比": n_zero / len(r),
+            "唯一值占比": r.nunique() / len(r),
+            "可用": (n_zero / len(r) < 0.05) and (r.nunique() / len(r) > 0.80),
+        })
+    return pd.DataFrame(rows)
