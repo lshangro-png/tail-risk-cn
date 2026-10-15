@@ -12,7 +12,7 @@
 |---|---|---|---|
 | `studies/01_single_asset_tail/` | 单资产肥尾、GPD、ES/VaR | 计划中 | |
 | [`studies/02_tail_dependence/`](studies/02_tail_dependence/) | 尾部相关性：数据、PIT、Copula、噪声基准 | ✅ | 方法基础设施 |
-| [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债部分 | **部分复现，核心证据不成立** |
+| [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债部分 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
 | `studies/04_cib_single_asset_warning/` | 兴业（2025）单资产尾部预警 | 计划中 | |
 | `studies/05_nesc_hierarchical_es/` | 东北（2025）分层聚类组合 ES | 计划中 | |
 | `studies/06_gtja_kde_simulation/` | 国泰君安 KDE + Cholesky 模拟配置 | 计划中 | |
@@ -25,6 +25,8 @@ tailrisk/          核心库
   data.py            取数（中债官网 / AkShare / 聚宽）、缓存、同花顺导出解析、质量体检
   marginals.py       边缘分布与 PIT
   copula.py          Clayton / Gumbel / Gaussian、滚动尾部相关、噪声基准
+  elliptical.py      t-Copula 与高斯的似然比检验（是否有超出普通相关的尾部联动）
+  sjc.py             SJC Copula：上下尾同时估计、不对称检验、旋转（股跌债涨）
   signals.py         趋势、预警状态机、事件核对
   backtest.py        日频回测、风险平价、绩效统计
 studies/           各篇复现，每篇一个目录（notebook + README）
@@ -51,8 +53,13 @@ jupyter notebook studies/03_cicc_stock_bond_warning/stock_bond_warning.ipynb
 1. **噪声基准必须匹配相关强度。** Clayton/Gumbel 的 λ>0 主要反映窗口内是否正相关，
    与有没有尾部相关关系不大。所以对照基准要用「相关强度相同、尾部相关为 0」的高斯 copula
    （`copula.expected_under_gaussian`），只和独立数据比是不够的。
-2. **边缘分布只用窗口内的数据。** 全样本 PIT 有前视偏差，还会把波动率聚集误判成尾部相关。
-3. **判零口径要写清楚。** 点估计判零和 LR 检验判零的结论差别很大，两种都要报告。
+2. **短窗口下的单参数 Copula 测到的主要是普通相关。** 60 日窗口的 Clayton/Gumbel λ 几乎完全由窗口相关系数决定（AUC 0.95）。
+   要检验「超出普通相关的尾部联动」，应该用有独立尾部参数的模型（如 t 对比高斯，`elliptical.t_vs_gaussian`），并且给足样本。
+   要检验上下尾是否不对称，应该在同一个模型里同时估计两尾（SJC，`sjc.asymmetry_test`），
+   而不是像中金那样用 Clayton、Gumbel 各估各的。尾部相关的**水平**仍混有普通相关，要和同等相关强度的高斯基准对照
+   （`sjc.gaussian_tau_baseline`）。
+3. **边缘分布只用窗口内的数据。** 全样本 PIT 有前视偏差，还会把波动率聚集误判成尾部相关。
+4. **判零口径要写清楚。** 点估计判零和 LR 检验判零的结论差别很大，两种都要报告。
 
 ## 纪律
 

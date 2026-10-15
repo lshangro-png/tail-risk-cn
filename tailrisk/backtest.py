@@ -77,13 +77,19 @@ def max_drawdown(r):
     return float((nav / nav.cummax() - 1).min())
 
 
-def perf_stats(r):
+def perf_stats(r, rf=0.02):
+    """
+    绩效统计。「收益波动比」= 年化收益/年化波动，与中金原文同口径；
+    但空仓期按现金利率计息、波动为 0，会抬高这个比值，
+    所以另给扣除无风险利率 rf 后的「超额夏普」，比较策略时以它为准。
+    """
     r = r.dropna()
     yrs = len(r) / TRADING_DAYS
     ann = (1 + r).prod() ** (1 / yrs) - 1
     vol = r.std() * np.sqrt(TRADING_DAYS)
     mdd = max_drawdown(r)
     return {"年化收益": ann, "年化波动": vol, "收益波动比": ann / vol if vol else np.nan,
+            "超额夏普": (ann - rf) / vol if vol else np.nan,
             "最大回撤": mdd, "卡玛比率": ann / abs(mdd) if mdd else np.nan}
 
 
