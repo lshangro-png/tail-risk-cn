@@ -61,3 +61,15 @@ def test_risk_parity_weights_are_lagged_and_inverse_vol():
     expect = (1 / vol) / (1 / vol).sum()
     np.testing.assert_allclose(w.loc[nxt].values, expect.values, rtol=1e-6)
     assert w.loc[month_end].ne(w.loc[nxt]).any()            # 调仓日当天仍用旧权重
+
+
+def test_pairwise_cash_overlay_rules():
+    idx = pd.bdate_range("2021-01-01", periods=4)
+    r = pd.DataFrame({"股": 0.01, "债": 0.002, "金": 0.005}, index=idx)
+    w = {"股": 0.2, "债": 0.6, "金": 0.2}
+    warn = {("股", "债"): pd.Series([False, True, True, False], idx),
+            ("股", "金"): pd.Series([False, False, True, False], idx)}
+    out, n = bt.pairwise_cash_overlay(r, w, warn, cash_rate=0.0)
+    # t 日状态 → t+1 日执行：第 2 天 n=0；第 3 天 n=1（股债转现金，只剩金 0.2）；第 4 天 n=2 全现金
+    assert n.tolist() == [0, 0, 1, 2]
+    np.testing.assert_allclose(out.values, [0.0042, 0.0042, 0.2 * 0.005, 0.0])

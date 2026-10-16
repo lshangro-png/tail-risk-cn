@@ -101,3 +101,26 @@ def yearly_table(returns_df):
         out[(name, "年收益")] = g.apply(lambda x: (1 + x).prod() - 1)
         out[(name, "年最大回撤")] = g.apply(max_drawdown)
     return pd.DataFrame(out)
+
+
+def pairwise_cash_overlay(returns, base_weights, warnings, cash_rate=0.02):
+    """
+    中金多资产回撤控制：每日统计两两预警的触发数 n（t 日收盘状态，t+1 日执行）。
+        n=0   按基准权重配置
+        n=1   触发预警的两个资产仓位转为货币，其余资产保持基准权重
+        n≥2   100% 货币
+    base_weights：{资产: 权重}；warnings：{(资产a, 资产b): 日频布尔序列}。
+    基准权重视为每日再平衡（与 portfolio_returns 一致）。
+    """
+    idx = returns.index
+    w0 = pd.Series(base_weights, dtype=float)
+    states = {pair: s.reindex(idx, fill_value=False).astype(bool).shift(1, fill_value=False)
+              for pair, s in warnings.items()}
+    n = sum(s.astype(int) for s in states.values())
+    weights = pd.DataFrame(np.tile(w0.values, (len(idx), 1)), index=idx, columns=w0.index)
+    for pair, s in states.items():
+        single = s & (n == 1)
+        weights.loc[single, list(pair)] = 0.0
+    weights.loc[n >= 2, :] = 0.0
+    r = (weights * returns[w0.index]).sum(axis=1) + (1 - weights.sum(axis=1)) * cash_rate / TRADING_DAYS
+    return r, n

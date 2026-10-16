@@ -12,7 +12,7 @@
 |---|---|---|---|
 | `studies/01_single_asset_tail/` | 单资产肥尾、GPD、ES/VaR | 计划中 | |
 | [`studies/02_tail_dependence/`](studies/02_tail_dependence/) | 尾部相关性：数据、PIT、Copula、噪声基准 | ✅ | 方法基础设施 |
-| [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债部分 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
+| [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债 + 股债金多资产 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
 | `studies/04_cib_single_asset_warning/` | 兴业（2025）单资产尾部预警 | 计划中 | |
 | `studies/05_nesc_hierarchical_es/` | 东北（2025）分层聚类组合 ES | 计划中 | |
 | `studies/06_gtja_kde_simulation/` | 国泰君安 KDE + Cholesky 模拟配置 | 计划中 | |

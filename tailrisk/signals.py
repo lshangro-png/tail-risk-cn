@@ -91,3 +91,20 @@ def match_episodes(ours, reference=CICC_EPISODES, tolerance_days=20):
     matched = pd.DataFrame(rows)
     extra = ours.drop(index=list(used))
     return matched, extra
+
+
+def pair_warning(prices, returns, a, b, release_on, window=60, zero_rule="point", dif_kind="ma"):
+    """
+    任意两资产的「双杀」预警（中金：股债、股金、债金用完全相同的方法定义）。
+
+    触发：λ_D>0 且 λ_U=0 且 a、b 至少一方 DIF<0
+    解除：λ_D=0 且 release_on 的 DIF>0（股债预警里是债券；原文未说明其他两对用哪一方）
+    返回与 warning_state 相同的 DataFrame，index 为重估日。
+    """
+    from .copula import rolling_tail_dependence
+
+    roll = rolling_tail_dependence(returns[a], returns[b], window=window, zero_rule=zero_rule)
+    dif = {k: dif_trend(prices[k], kind=dif_kind).reindex(roll.index) for k in (a, b)}
+    other = b if release_on == a else a
+    # warning_state 的第 4 个参数是解除时要求上涨的资产
+    return warning_state(roll.lambda_D, roll.lambda_U, dif[other], dif[release_on])

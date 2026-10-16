@@ -28,7 +28,8 @@ SERIES = {
     "上证企业债指数":   ("ak_index", "sh000013"),
     "中债综合财富":     ("chinabond", "2c90818811afed8d0111c0c672b31578"),  # 中金原文所用
     "中债新综合财富":   ("chinabond", "8a8b2ca0332abed20134ea76d8885831"),
-    "黄金Au9999":      ("ak_sge", "Au99.99"),
+    "黄金Au9999":      ("ak_sge", "Au99.99"),       # 上海金交所现货，免费数据仅 2016-12 起
+    "黄金ETF":         ("ak_etf_hfq", "518880"),     # 华安黄金ETF（跟踪 Au99.99，后复权），2013-07 起；与 A 股同时段交易
 }
 
 
@@ -61,6 +62,9 @@ def _fetch(source, arg):
     if source == "ak_index":
         df = ak.stock_zh_index_daily(symbol=arg)
         return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    if source == "ak_etf_hfq":
+        df = ak.fund_etf_hist_em(symbol=arg, period="daily", adjust="hfq")
+        return pd.Series(df["收盘"].values, index=pd.to_datetime(df["日期"]))
     if source == "ak_sge":
         df = ak.spot_hist_sge(symbol=arg)
         return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
