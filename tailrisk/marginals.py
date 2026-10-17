@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 from scipy.stats import rankdata
 
@@ -58,3 +59,36 @@ def pit_vol_scaled(r, window=60):
     vol = s.rolling(window, min_periods=window // 2).std().shift(1)
     z = (s / vol).dropna()
     return pd.Series(rank_pit(z.values), index=z.index)
+
+
+# ══════════════════════════════════════════════════════════════════
+# 单资产尾部风险：ES（预期亏损）
+# ══════════════════════════════════════════════════════════════════
+
+def es_hist(r, q=0.95):
+    """历史法 ES：损失（−收益）中超过 q 分位 VaR 的部分的均值。返回正数（损失）。"""
+    loss = -np.asarray(pd.Series(r).dropna(), dtype=float)
+    var = np.quantile(loss, q)
+    return float(loss[loss >= var].mean())
+
+
+def es_gpd(r, q=0.95, threshold=0.90):
+    """
+    POT-GPD 法 ES：对超过 threshold 分位的损失超额拟合广义帕累托分布（位置固定为 0），
+        VaR_q = u + β/ξ·[((n/N_u)(1−q))^(−ξ) − 1]
+        ES_q  = (VaR_q + β − ξu) / (1 − ξ)          （ξ < 1）
+    ξ≈0 时取指数分布极限：VaR_q = u − β·ln((n/N_u)(1−q))，ES_q = VaR_q + β。
+    """
+    from scipy.stats import genpareto
+
+    loss = -np.asarray(pd.Series(r).dropna(), dtype=float)
+    n = len(loss)
+    u = np.quantile(loss, threshold)
+    exc = loss[loss > u] - u
+    xi, _, beta = genpareto.fit(exc, floc=0)
+    ratio = n / len(exc) * (1 - q)
+    if abs(xi) < 1e-6:
+        var = u - beta * np.log(ratio)
+        return float(var + beta)
+    var = u + beta / xi * (ratio ** (-xi) - 1)
+    return float((var + beta - xi * u) / (1 - xi)) if xi < 1 else np.inf

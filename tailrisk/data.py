@@ -30,7 +30,20 @@ SERIES = {
     "中债新综合财富":   ("chinabond", "8a8b2ca0332abed20134ea76d8885831"),
     "黄金Au9999":      ("ak_sge", "Au99.99"),       # 上海金交所现货，免费数据仅 2016-12 起
     "黄金ETF":         ("ak_etf_hfq", "518880"),     # 华安黄金ETF（跟踪 Au99.99，后复权），2013-07 起；与 A 股同时段交易
+    # 东北证券（2025）示例中的 10 只 ETF，均为后复权（含分红再投资）
+    "沪深300ETF":      ("ak_etf_hfq", "510300"),
+    "中证500ETF":      ("ak_etf_hfq", "159922"),
+    "中证1000ETF":     ("ak_etf_hfq", "512100"),
+    "创业板ETF":       ("ak_etf_hfq", "159908"),
+    "消费ETF":         ("ak_etf_hfq", "159928"),
+    "纳指ETF":         ("ak_etf_hfq", "513100"),
+    "恒生ETF":         ("ak_etf_hfq", "159920"),
+    "红利ETF":         ("ak_etf_hfq", "510880"),
+    "大宗商品ETF":     ("ak_etf_hfq", "510170"),
 }
+
+ETF10 = ["沪深300ETF", "中证500ETF", "中证1000ETF", "创业板ETF", "消费ETF",
+         "黄金ETF", "纳指ETF", "恒生ETF", "红利ETF", "大宗商品ETF"]
 
 
 _CHINABOND_URL = "https://yield.chinabond.com.cn/cbweb-mn/indices/singleIndexQuery"
@@ -63,12 +76,33 @@ def _fetch(source, arg):
         df = ak.stock_zh_index_daily(symbol=arg)
         return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
     if source == "ak_etf_hfq":
-        df = ak.fund_etf_hist_em(symbol=arg, period="daily", adjust="hfq")
-        return pd.Series(df["收盘"].values, index=pd.to_datetime(df["日期"]))
+        # 东方财富后复权；该接口连续请求易被限流，失败时改用腾讯后复权
+        # （2016 年以来与东方财富的日收益差异 < 0.08%，来自价格三位小数的舍入）
+        try:
+            df = ak.fund_etf_hist_em(symbol=arg, period="daily", adjust="hfq")
+            return pd.Series(df["收盘"].values, index=pd.to_datetime(df["日期"]))
+        except Exception:
+            prefix = "sh" if arg.startswith("5") else "sz"
+            df = ak.stock_zh_a_hist_tx(symbol=prefix + arg, start_date="20000101",
+                                       end_date=pd.Timestamp.today().strftime("%Y%m%d"), adjust="hfq")
+            return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
     if source == "ak_sge":
         df = ak.spot_hist_sge(symbol=arg)
         return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
     raise ValueError(f"未知数据源 {source}")
+
+
+def _fetch_with_retry(source, arg, tries=4):
+    """部分免费接口（如东方财富）连续请求过快会断开连接：间隔递增地重试几次。"""
+    import time
+
+    for k in range(tries):
+        try:
+            return _fetch(source, arg)
+        except Exception:
+            if k == tries - 1:
+                raise
+            time.sleep(10 * 2 ** k)
 
 
 def load_series(name, refresh=False):
@@ -84,7 +118,7 @@ def load_series(name, refresh=False):
     if path.exists() and not refresh:
         s = pd.read_csv(path, index_col=0, parse_dates=True).iloc[:, 0]
     else:
-        s = _fetch(*SERIES[name]).sort_index()
+        s = _fetch_with_retry(*SERIES[name]).sort_index()
         s = s[~s.index.duplicated(keep="last")].astype(float)
         s.to_frame(name).to_csv(path)
     s.name = name
