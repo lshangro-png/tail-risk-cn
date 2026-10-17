@@ -15,7 +15,7 @@
 | [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债 + 股债金多资产 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
 | `studies/04_cib_single_asset_warning/` | 兴业（2025）单资产尾部预警 | 计划中 | |
 | [`studies/05_tail_hierarchical_allocation/`](studies/05_tail_hierarchical_allocation/) | 基于尾部相关的分层聚类配置（源自整理稿记载的东北证券方法，未取得原文） | ✅ | **尾部相关在聚类、合成、配置上都无增量** |
-| `studies/06_gtja_kde_simulation/` | 国泰君安 KDE + Cholesky 模拟配置 | 计划中 | |
+| [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）KDE + Cholesky 模拟配置（未取得原文全文） | ✅ | **递推式不保边缘分布、结果依赖资产顺序；样本外影响不显著** |
 | `studies/07_tail_risk_parity/` | 尾部风险平价（历史 ETL 版） | 计划中 | |
 
 ## 目录结构
@@ -28,6 +28,7 @@ tailrisk/          核心库
   elliptical.py      t-Copula 与高斯的似然比检验（是否有超出普通相关的尾部联动）
   sjc.py             SJC Copula：上下尾同时估计、不对称检验、旋转（股跌债涨）
   allocation.py      距离与聚类、HRP、最小方差、最小 ES、arctan 递归合成、滚动回测
+  simulation.py      KDE 边缘 + 三种注入相关的方法（国泰君安递推、高斯 Copula、Iman-Conover）
   signals.py         趋势、预警状态机、事件核对
   backtest.py        日频回测、风险平价、绩效统计
 studies/           各篇复现，每篇一个目录（notebook + README）
