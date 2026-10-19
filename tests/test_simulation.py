@@ -50,3 +50,33 @@ def test_simulate_horizon_shape():
     H = _skewed_hist(300)
     P = sm.simulate_horizon(sm.iman_conover, H, horizon=20, n_paths=50, rng=np.random.default_rng(4))
     assert P.shape == (50, 20, 3)
+
+
+def test_simplex_grid():
+    g = sm.simplex_grid(3, 0.25)
+    assert len(g) == 15                                      # C(4+2, 2)
+    np.testing.assert_allclose(g.sum(axis=1), 1.0)
+    assert (g >= 0).all()
+
+
+def test_path_risk_decomposition_and_values():
+    rng = np.random.default_rng(5)
+    paths = rng.normal(0.0005, 0.01, (2000, 20, 2))
+    W = sm.simplex_grid(2, 0.1)
+    r = sm.path_risk(paths, W)
+    np.testing.assert_allclose(r["TR"], r["IH"] + r["EH"])     # 总风险 = 期内 + 期末（互斥）
+    # 对单一资产直接按对数路径计算，应与向量化结果一致
+    logP = np.log(np.cumprod(1 + paths[:, :, 0], axis=1))
+    ih = np.minimum(logP.min(1), 0) <= -0.01
+    eh = ~ih & (logP[:, -1] <= 0.01)
+    i = int(np.flatnonzero((W[:, 0] == 1.0))[0])
+    assert r["IH"][i] == pytest.approx(ih.mean()) and r["EH"][i] == pytest.approx(eh.mean())
+
+
+def test_optimizer_picks_obvious_asset():
+    """一个资产稳定上涨（几乎不会触发风险），另一个高波动：应全部配给前者。"""
+    rng = np.random.default_rng(6)
+    steady = np.full((1500, 20, 1), 0.001) + rng.normal(0, 0.0002, (1500, 20, 1))
+    wild = rng.normal(0, 0.03, (1500, 20, 1))
+    w, risk = sm.gtja_optimal_weights(np.concatenate([steady, wild], axis=2), sm.simplex_grid(2, 0.05))
+    assert w[0] == pytest.approx(1.0) and risk["TR"] < 0.05

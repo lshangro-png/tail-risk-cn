@@ -28,6 +28,7 @@ SERIES = {
     "上证企业债指数":   ("ak_index", "sh000013"),
     "中债综合财富":     ("chinabond", "2c90818811afed8d0111c0c672b31578"),  # 中金原文所用
     "中债新综合财富":   ("chinabond", "8a8b2ca0332abed20134ea76d8885831"),
+    "中债国债总财富":   ("chinabond", "2c9081e50e8767dc010e879acb220021"),  # 国泰君安（2018）所用
     "黄金Au9999":      ("ak_sge", "Au99.99"),       # 上海金交所现货，免费数据仅 2016-12 起
     "黄金ETF":         ("ak_etf_hfq", "518880"),     # 华安黄金ETF（跟踪 Au99.99，后复权），2013-07 起；与 A 股同时段交易
     # 东北证券（2025）示例中的 10 只 ETF，均为后复权（含分红再投资）
@@ -41,6 +42,10 @@ SERIES = {
     "红利ETF":         ("ak_etf_hfq", "510880"),
     "大宗商品ETF":     ("ak_etf_hfq", "510170"),
     "标普500ETF":      ("ak_etf_hfq", "513500"),     # 国泰君安（2018）五资产示例中标普500 的同步替代
+    # 国泰君安（2018）复现用的长历史序列（2006 年起）
+    "标普500":         ("ak_us_index", ".INX"),
+    "恒生指数(盈富基金)": ("ak_hk_hfq", "02800"),       # 新浪恒指仅 2013 年起；盈富基金与恒指日收益相关 0.98
+    "黄金(GLD×美元兑人民币)": ("gold_cny_gld", None),  # 免费的上金所 Au99.99 仅 2016-12 起
 }
 
 ETF10 = ["沪深300ETF", "中证500ETF", "中证1000ETF", "创业板ETF", "消费ETF",
@@ -67,9 +72,23 @@ def _fetch_chinabond(index_id):
     return pd.Series(pd.to_numeric(list(js.values()), errors="coerce"), index=idx)
 
 
+_FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}"
+
+
+def _fetch_fred(series_id):
+    """圣路易斯联储 FRED 公开数据（CSV，无需账号）。"""
+    df = pd.read_csv(_FRED_CSV.format(series_id), index_col=0, parse_dates=True)
+    return pd.to_numeric(df.iloc[:, 0], errors="coerce").dropna()
+
+
 def _fetch(source, arg):
     if source == "chinabond":
         return _fetch_chinabond(arg)
+    if source == "gold_cny_gld":
+        # SPDR 黄金 ETF（美元）× 美元兑人民币（FRED DEXCHUS），按美股交易日对齐、汇率前向填充
+        gld = _fetch("ak_us_daily", "GLD")
+        fx = _fetch_fred("DEXCHUS").reindex(gld.index, method="ffill")
+        return (gld * fx).dropna()
 
     import akshare as ak
 
@@ -87,6 +106,15 @@ def _fetch(source, arg):
             df = ak.stock_zh_a_hist_tx(symbol=prefix + arg, start_date="20000101",
                                        end_date=pd.Timestamp.today().strftime("%Y%m%d"), adjust="hfq")
             return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    if source == "ak_us_index":
+        df = ak.index_us_stock_sina(symbol=arg)
+        return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    if source == "ak_us_daily":
+        df = ak.stock_us_daily(symbol=arg, adjust="")
+        return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    if source == "ak_hk_hfq":
+        df = ak.stock_hk_daily(symbol=arg, adjust="hfq")
+        return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
     if source == "ak_sge":
         df = ak.spot_hist_sge(symbol=arg)
         return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))

@@ -15,7 +15,7 @@
 | [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债 + 股债金多资产 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
 | `studies/04_cib_single_asset_warning/` | 兴业（2025）单资产尾部预警 | 计划中 | |
 | [`studies/05_tail_hierarchical_allocation/`](studies/05_tail_hierarchical_allocation/) | 基于尾部相关的分层聚类配置（源自整理稿记载的东北证券方法，未取得原文） | ✅ | **尾部相关在聚类、合成、配置上都无增量** |
-| [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）KDE + Cholesky 模拟配置（未取得原文全文） | ✅ | **递推式不保边缘分布、结果依赖资产顺序；样本外影响不显著** |
+| [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）尾部风险最小化配置（KDE + Cholesky 模拟） | ✅ | **2006–2017 基本复现；递推式有缺陷但影响小；发表后明显变差** |
 | `studies/07_tail_risk_parity/` | 尾部风险平价（历史 ETL 版） | 计划中 | |
 
 ## 目录结构
