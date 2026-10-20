@@ -13,7 +13,7 @@
 | `studies/01_single_asset_tail/` | 单资产肥尾、GPD、ES/VaR | 计划中 | |
 | [`studies/02_tail_dependence/`](studies/02_tail_dependence/) | 尾部相关性：数据、PIT、Copula、噪声基准 | ✅ | 方法基础设施 |
 | [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债 + 股债金多资产 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
-| `studies/04_cib_single_asset_warning/` | 兴业（2025）单资产尾部预警 | 计划中 | |
+| [`studies/04_cib_single_asset_warning/`](studies/04_cib_single_asset_warning/) | 兴业（2025）单资产尾部预警 | ✅ | **大部分可复现；效果几乎都来自单次危机；黄金信号有前视** |
 | [`studies/05_tail_hierarchical_allocation/`](studies/05_tail_hierarchical_allocation/) | 基于尾部相关的分层聚类配置（源自整理稿记载的东北证券方法，未取得原文） | ✅ | **尾部相关在聚类、合成、配置上都无增量** |
 | [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）尾部风险最小化配置（KDE + Cholesky 模拟） | ✅ | **2006–2017 基本复现；递推式有缺陷但影响小；发表后明显变差** |
 | `studies/07_tail_risk_parity/` | 尾部风险平价（历史 ETL 版） | 计划中 | |
@@ -30,6 +30,7 @@ tailrisk/          核心库
   allocation.py      距离与聚类、HRP、最小方差、最小 ES、arctan 递归合成、滚动回测
   simulation.py      KDE 边缘 + 三种注入相关的方法（国泰君安递推、高斯 Copula、Iman-Conover）
   signals.py         趋势、预警状态机、事件核对
+  warning.py         单资产尾部预警：滚动分位、PcaScore、事件研究、安慰剂、去掉单次事件
   backtest.py        日频回测、风险平价、绩效统计
 studies/           各篇复现，每篇一个目录（notebook + README）
 tests/             回归测试
@@ -69,3 +70,4 @@ jupyter notebook studies/03_cicc_stock_bond_warning/stock_bond_warning.ipynb
 - 凡是「测出了信号」的结论，都必须对照噪声基准
 - 所有滚动统计只能用截至当日的数据；信号在 t 日收盘后确定，最早在 t+1 日交易
 - 不为了对上原文去调参数。原文没写清的地方，在 README 的口径差异表里列出，并做稳健性检验
+- 用美国收盘后的数据给亚洲资产出信号，要滞后一天对齐，否则就是前视

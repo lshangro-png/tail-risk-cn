@@ -46,7 +46,25 @@ SERIES = {
     "标普500":         ("ak_us_index", ".INX"),
     "恒生指数(盈富基金)": ("ak_hk_hfq", "02800"),       # 新浪恒指仅 2013 年起；盈富基金与恒指日收益相关 0.98
     "黄金(GLD×美元兑人民币)": ("gold_cny_gld", None),  # 免费的上金所 Au99.99 仅 2016-12 起
+    # 兴业（2025）单资产尾部预警所需
+    "GLD":             ("ak_us_daily", "GLD"),
+    "纳斯达克100":      ("fred", "NASDAQ100"),
+    "布伦特原油":       ("fred", "DCOILBRENTEU"),
+    "美国10年实际利率":  ("fred", "DFII10"),
+    "VIX":             ("fred", "VIXCLS"),
+    "VXN":             ("fred", "VXNCLS"),
+    "OVX":             ("fred", "OVXCLS"),
+    "美元指数(美联储发达经济体)": ("fred", "DTWEXAFEGS"),   # ICE 美元指数无免费数据，此为构成接近的替代
+    "美元兑人民币":     ("fred", "DEXCHUS"),               # 离岸人民币无免费长历史，用在岸替代
+    "上证A股股息率":    ("lg_gxl", "上证A股"),
+    "中国10年国债收益率": ("cn_10y", None),
 }
+
+# 申万一级行业（31 个），用于以行业代替成分股计算 PcaScore
+SW_L1 = ["801010", "801030", "801040", "801050", "801080", "801110", "801120", "801130", "801140",
+         "801150", "801160", "801170", "801180", "801200", "801210", "801230", "801710", "801720",
+         "801730", "801740", "801750", "801760", "801770", "801780", "801790", "801880", "801890",
+         "801950", "801960", "801970", "801980"]
 
 ETF10 = ["沪深300ETF", "中证500ETF", "中证1000ETF", "创业板ETF", "消费ETF",
          "黄金ETF", "纳指ETF", "恒生ETF", "红利ETF", "大宗商品ETF"]
@@ -84,6 +102,8 @@ def _fetch_fred(series_id):
 def _fetch(source, arg):
     if source == "chinabond":
         return _fetch_chinabond(arg)
+    if source == "fred":
+        return _fetch_fred(arg)
     if source == "gold_cny_gld":
         # SPDR 黄金 ETF（美元）× 美元兑人民币（FRED DEXCHUS），按美股交易日对齐、汇率前向填充
         gld = _fetch("ak_us_daily", "GLD")
@@ -106,6 +126,15 @@ def _fetch(source, arg):
             df = ak.stock_zh_a_hist_tx(symbol=prefix + arg, start_date="20000101",
                                        end_date=pd.Timestamp.today().strftime("%Y%m%d"), adjust="hfq")
             return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
+    if source == "lg_gxl":
+        df = ak.stock_a_gxl_lg(symbol=arg)
+        return pd.Series(df["股息率"].values, index=pd.to_datetime(df["日期"]))
+    if source == "cn_10y":
+        df = ak.bond_zh_us_rate(start_date="20020101")
+        return pd.Series(df["中国国债收益率10年"].values, index=pd.to_datetime(df["日期"])).dropna()
+    if source == "sw_index":
+        df = ak.index_hist_sw(symbol=arg, period="day")
+        return pd.Series(df["收盘"].values, index=pd.to_datetime(df["日期"]))
     if source == "ak_us_index":
         df = ak.index_us_stock_sina(symbol=arg)
         return pd.Series(df["close"].values, index=pd.to_datetime(df["date"]))
@@ -162,6 +191,22 @@ def load_prices(names, start=None, end=None, how="inner", refresh=False):
     """
     df = pd.concat([load_series(n, refresh=refresh) for n in names], axis=1, join=how)
     return df.loc[start:end].sort_index()
+
+
+def load_sw_industries(refresh=False):
+    """申万一级行业收盘点位（31 列），各自缓存为 data/cache/申万_<代码>.csv。"""
+    import time
+
+    out = {}
+    for code in SW_L1:
+        name = f"申万_{code}"
+        if name not in SERIES:
+            SERIES[name] = ("sw_index", code)
+        cached = (CACHE_DIR / f"{name}.csv").exists()
+        out[code] = load_series(name, refresh=refresh)
+        if not cached:
+            time.sleep(1)
+    return pd.concat(out, axis=1).sort_index()
 
 
 def to_returns(prices):
