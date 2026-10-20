@@ -10,7 +10,7 @@
 
 | 目录 | 研究 | 状态 | 判定 |
 |---|---|---|---|
-| `studies/01_single_asset_tail/` | 单资产肥尾、GPD、ES/VaR | 计划中 | |
+| [`studies/01_single_asset_tail/`](studies/01_single_asset_tail/) | 单资产肥尾的事实；六种 VaR/ES 估计方法的回测 | ✅ | **整理稿的肥尾事实成立；GARCH-EVT 最可靠，正态不可用** |
 | [`studies/02_tail_dependence/`](studies/02_tail_dependence/) | 尾部相关性：数据、PIT、Copula、噪声基准 | ✅ | 方法基础设施 |
 | [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债 + 股债金多资产 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
 | [`studies/04_cib_single_asset_warning/`](studies/04_cib_single_asset_warning/) | 兴业（2025）单资产尾部预警 | ✅ | **大部分可复现；效果几乎都来自单次危机；黄金信号有前视** |
@@ -24,6 +24,7 @@
 tailrisk/          核心库
   data.py            取数（中债官网 / AkShare / 聚宽）、缓存、同花顺导出解析、质量体检
   marginals.py       边缘分布与 PIT、单资产 ES（历史法 / GPD）
+  riskmodels.py      单资产 VaR/ES 滚动预测（历史、正态、t、GPD、GARCH-FHS、GARCH-EVT）与回测
   copula.py          Clayton / Gumbel / Gaussian、滚动尾部相关、噪声基准
   elliptical.py      t-Copula 与高斯的似然比检验（是否有超出普通相关的尾部联动）
   sjc.py             SJC Copula：上下尾同时估计、不对称检验、旋转（股跌债涨）

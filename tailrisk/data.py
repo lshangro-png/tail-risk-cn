@@ -24,6 +24,7 @@ CACHE_DIR = PROJECT_ROOT / "data" / "cache"
 SERIES = {
     "沪深300":         ("ak_index", "sh000300"),
     "中证500":         ("ak_index", "sh000905"),
+    "上证50":          ("ak_index", "sh000016"),
     "上证国债指数":     ("ak_index", "sh000012"),
     "上证企业债指数":   ("ak_index", "sh000013"),
     "中债综合财富":     ("chinabond", "2c90818811afed8d0111c0c672b31578"),  # 中金原文所用
