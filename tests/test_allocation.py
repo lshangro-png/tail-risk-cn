@@ -65,3 +65,30 @@ def test_cap_weights():
     w = al.cap_weights(pd.Series([0.5, 0.3, 0.1, 0.1]), upper=0.3)
     assert w.sum() == pytest.approx(1.0) and w.max() <= 0.3 + 1e-9
     assert w.iloc[2] == pytest.approx(w.iloc[3])            # 超额按原比例分配
+
+
+def test_erc_equalizes_vol_contributions():
+    R = _returns(k=5)
+    w = al.erc_weights(R)
+    rc = al.vol_contributions(w, R)
+    np.testing.assert_allclose(rc / rc.sum(), 0.2, atol=1e-3)
+
+
+def test_es_parity_equalizes_es_contributions_with_hedge_asset():
+    """含一个与股票负相关的「避险」资产：其 ES 贡献在等权时为负，TRP 解仍应使各贡献相等且为正。"""
+    rng = np.random.default_rng(7)
+    T = 3000
+    eq = rng.standard_t(4, (T, 2)) * 0.012 + rng.standard_t(4, (T, 1)) * 0.008
+    hedge = -0.3 * eq[:, :1] + rng.normal(0, 0.003, (T, 1))
+    X = pd.DataFrame(np.hstack([eq, hedge]), columns=["股1", "股2", "避险"])
+    assert al.es_contributions(np.full(3, 1 / 3), X)[2] < 0
+    w = al.es_parity_weights(X, q=0.95)
+    rc = al.es_contributions(w.values, X, q=0.95)
+    assert (rc > 0).all()
+    np.testing.assert_allclose(rc / rc.sum(), 1 / 3, atol=0.03)
+
+
+def test_es_parity_close_to_erc_for_gaussian():
+    """椭圆分布下 ES 贡献与波动率贡献成比例，两种风险平价的权重应几乎相同。"""
+    R = _returns(n=20000, k=4, seed=8)
+    np.testing.assert_allclose(al.es_parity_weights(R).values, al.erc_weights(R).values, atol=0.02)

@@ -260,3 +260,86 @@ def rolling_backtest(returns, strategies, lookback=250, rebalance="M", start=Non
 def turnover(W):
     """平均单边换手率（每次调仓权重变化绝对值之和的一半，按调仓次数平均）。"""
     return float(W.diff().abs().sum(axis=1).iloc[1:].mean() / 2)
+
+
+# ══════════════════════════════════════════════════════════════════
+# 风险平价与尾部风险平价（风险预算）
+# ══════════════════════════════════════════════════════════════════
+#
+# 风险预算的凸优化形式（Spinu 2013；Mausser & Romanko 2018；Roncalli 2013）：
+#     y* = argmin_{y>0}  R(y) − Σ b_i ln y_i，  w = y* / Σ y*
+# 对正齐次、凸的风险度量 R，最优点满足 y_i ∂R/∂y_i = b_i，即各资产的风险贡献之比等于预算之比。
+# R 取波动率 → 普通风险平价（ERC）；R 取 ES → 尾部风险平价（TRP）。
+# 避险资产在组合尾部日往往上涨、贡献为负，简单的迭代法会发散；凸优化形式在最优点保证各贡献为正。
+
+def erc_weights(R, budgets=None):
+    """普通风险平价：各资产对组合波动率的贡献相等（或按 budgets）。"""
+    import cvxpy as cp
+
+    S = R.cov().values
+    n = S.shape[0]
+    b = np.full(n, 1 / n) if budgets is None else np.asarray(budgets, float)
+    scale = 1 / np.sqrt(np.diag(S).mean())                     # 数值缩放，不影响解
+    y = cp.Variable(n, pos=True)
+    cp.Problem(cp.Minimize(0.5 * cp.quad_form(y, cp.psd_wrap(S * scale ** 2)) - b @ cp.log(y))).solve(solver="CLARABEL")
+    w = np.maximum(y.value, 0)
+    return pd.Series(w / w.sum(), R.columns)
+
+
+def es_parity_weights(scenarios, q=0.95, budgets=None):
+    """
+    尾部风险平价：各资产对组合 ES 的贡献相等（或按 budgets）。
+    scenarios：T×n 收益情景（历史收益，或 GARCH 过滤后的情景）。ES 用 Rockafellar–Uryasev 表达式。
+    """
+    import cvxpy as cp
+
+    X = np.asarray(scenarios, float)
+    X = X / X.std(axis=0).mean()                                  # 数值缩放，不影响解
+    T, n = X.shape
+    b = np.full(n, 1 / n) if budgets is None else np.asarray(budgets, float)
+    y = cp.Variable(n, pos=True)
+    alpha = cp.Variable()
+    u = cp.Variable(T, nonneg=True)                               # u_t ≥ 组合损失超过 α 的部分
+    prob = cp.Problem(cp.Minimize(alpha + cp.sum(u) / ((1 - q) * T) - b @ cp.log(y)), [u >= -X @ y - alpha])
+    try:
+        prob.solve(solver="CLARABEL")                             # 情景数在一千左右时快而准
+    except cp.error.SolverError:
+        prob.solve(solver="SCS", eps=1e-8, max_iters=200_000)     # 情景更多时 Clarabel 会失败
+    w = np.maximum(y.value, 0)
+    cols = scenarios.columns if hasattr(scenarios, "columns") else range(n)
+    return pd.Series(w / w.sum(), cols)
+
+
+def es_contributions(w, scenarios, q=0.95):
+    """
+    组合 ES 的欧拉分解：RC_i = −w_i · E[r_i | 组合落在最差的 (1−q) 尾部]，各项之和等于组合 ES。
+    """
+    X = np.asarray(scenarios, float)
+    w = np.asarray(w, float)
+    port = X @ w
+    k = max(int(np.ceil((1 - q) * len(port))), 1)
+    tail = np.argsort(port)[:k]
+    return -w * X[tail].mean(axis=0)
+
+
+def vol_contributions(w, R):
+    S = np.asarray(R.cov(), float)
+    w = np.asarray(w, float)
+    return w * (S @ w) / np.sqrt(w @ S @ w)
+
+
+def fhs_scenarios(R):
+    """
+    GARCH 过滤的历史情景：各资产分别拟合 GJR-GARCH(1,1)，得到标准化残差 z_t，
+    再乘以各自明日的预测波动率。保留历史上各资产残差的同日联动（依赖结构），
+    但把尺度换成当前的波动率水平（Barone-Adesi 等 1999 的多元 FHS）。
+    """
+    from .riskmodels import fit_gjr, gjr_filter
+
+    out = {}
+    for c in R.columns:
+        x = R[c].values
+        p = fit_gjr(x)
+        sd, sd_next = gjr_filter(x, p)
+        out[c] = (x - p["mu"] / 100) / sd * sd_next + p["mu"] / 100
+    return pd.DataFrame(out, index=R.index)

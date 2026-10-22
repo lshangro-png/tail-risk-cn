@@ -3,10 +3,9 @@ name = "tailrisk"
 version = "0.1.0"
 description = "尾部风险研究：研报复现与方法检验"
 requires-python = ">=3.10"
-dependencies = ["numpy", "pandas>=2.0", "scipy", "matplotlib", "requests", "akshare"]
+dependencies = ["numpy", "pandas>=2.0", "scipy", "matplotlib", "requests", "akshare", "arch", "cvxpy"]
 
 [project.optional-dependencies]
-garch = ["arch"]
 jq = ["jqdatasdk"]
 dev = ["pytest", "jupyter", "nbconvert"]
 
