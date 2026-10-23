@@ -3,7 +3,7 @@
 [中文](README.md)
 
 This project replicates sell-side research on tail-risk measurement, allocation and early-warning signals
-(CICC, Guotai Junan, Industrial Securities, Northeast Securities, and AllianceBernstein's tail risk parity).
+(CICC, Guotai Junan, Industrial Securities, Northeast Securities, and AllianceBernstein's tail risk parity, and Lee 2025 on factor crowding).
 For each study it asks the same question: **does the method pick up a real signal, or noise?**
 
 All studies share one library, `tailrisk/`. Each study lives in its own folder under `studies/`. The folder's README
@@ -21,6 +21,7 @@ The notebooks and study READMEs are written in Chinese.
 | [`05_tail_hierarchical_allocation`](studies/05_tail_hierarchical_allocation/) | Hierarchical clustering on lower-tail dependence (method as described for Northeast Securities; original not available) | Tail dependence adds **nothing** over plain correlation in clustering, risk aggregation or out-of-sample allocation |
 | [`06_gtja_kde_simulation`](studies/06_gtja_kde_simulation/) | Guotai Junan (2018): KDE simulation and minimisation of an inner-/end-of-horizon risk measure | 2006–2017 results largely replicate. The Cholesky recursion distorts variances and marginals and depends on asset ordering, but has little effect on results here. Performance deteriorates after publication |
 | [`07_tail_risk_parity`](studies/07_tail_risk_parity/) | Tail risk parity (ES-budgeting) vs. risk parity | Slightly better but not significant. **The gain comes from GARCH volatility scaling, not from using ES** |
+| [`08_lee_factor_crowding`](studies/08_lee_factor_crowding/) | Lee (2025, arXiv 2512.11913 v1): factor crowding, hyperbolic alpha decay and crash risk on 8 US factors | The statistics replicate (momentum R² 0.64 vs 0.65), but **"crowding predicts crashes" does not hold**. The same-month effect is a timing artifact (pure-noise data give a ratio of about 1.8). Momentum's 0.38 comes from a stale threshold (279 of 288 test months are "crowded"). After controlling for volatility, crowding has no predictive power. These findings agree with the author's own v3 revision |
 
 ## Cross-cutting findings
 
@@ -39,7 +40,7 @@ The notebooks and study READMEs are written in Chinese.
 
 ```
 tailrisk/          shared library
-  data.py            data sources (ChinaBond, AkShare, FRED, JoinQuant), caching, quality checks
+  data.py            data sources (ChinaBond, AkShare, FRED, Kenneth French, JoinQuant), caching, quality checks
   marginals.py       PIT; historical and GPD expected shortfall
   riskmodels.py      rolling VaR/ES (HS, normal, t, GPD, GARCH-FHS, GARCH-EVT); Kupiec, Christoffersen, Acerbi–Szekely tests
   copula.py          Clayton / Gumbel / Gaussian, rolling tail dependence, noise baselines
@@ -49,6 +50,7 @@ tailrisk/          shared library
   simulation.py      KDE marginals with three dependence schemes (GTJA recursion, Gaussian copula, Iman-Conover)
   signals.py         trend, warning state machine
   warning.py         single-asset warnings, event studies, placebo and leave-one-episode-out tests
+  crowding.py        factor crowding: rolling Sharpe, decay fits, crowding residuals, crash tables, pure-noise null
   backtest.py        daily backtests and performance statistics
 studies/           one folder per study (notebook + README)
 tests/             regression tests
@@ -63,7 +65,7 @@ jupyter notebook studies/01_single_asset_tail/single_asset_tail.ipynb
 ```
 
 Data is downloaded on first use and cached in `data/cache/`. All default sources are free and need no account:
-ChinaBond, AkShare (Sina, Tencent and Eastmoney), and FRED.
+ChinaBond, AkShare (Sina, Tencent and Eastmoney), FRED and the Kenneth French Data Library.
 **No data is committed**: vendor data (ChinaBond, Wind, JoinQuant) may not be redistributed, so the repository only contains
 the code that fetches it.
 

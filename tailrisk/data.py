@@ -331,3 +331,65 @@ def data_quality(df):
             "可用": (n_zero / len(r) < 0.05) and (r.nunique() / len(r) > 0.80),
         })
     return pd.DataFrame(rows)
+
+
+# ══════════════════════════════════════════════════════════════════
+# Kenneth French 数据库（美股因子，月度）
+# ══════════════════════════════════════════════════════════════════
+
+_FRENCH = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{}_CSV.zip"
+FRENCH_FILES = {
+    "F-F_Research_Data_5_Factors_2x3": ["Mkt-RF", "SMB", "HML", "RMW", "CMA"],
+    "F-F_Momentum_Factor": ["Mom"],
+    "F-F_ST_Reversal_Factor": ["ST_Rev"],
+    "F-F_LT_Reversal_Factor": ["LT_Rev"],
+}
+
+
+def _parse_french_monthly(text):
+    """取 CSV 中第一段月度数据（行首为 YYYYMM），到第一个空行或年度段为止。数值为百分比。"""
+    import io
+
+    lines = text.splitlines()
+    start = next(i for i, l in enumerate(lines) if l.strip().split(",")[0].strip().isdigit()
+                 and len(l.strip().split(",")[0].strip()) == 6)
+    header = lines[start - 1]
+    body = []
+    for l in lines[start:]:
+        key = l.split(",")[0].strip()
+        if not (key.isdigit() and len(key) == 6):
+            break
+        body.append(l)
+    df = pd.read_csv(io.StringIO("\n".join([header] + body)), index_col=0)
+    df.columns = [c.strip() for c in df.columns]
+    df.index = pd.to_datetime(df.index.astype(str), format="%Y%m") + pd.offsets.MonthEnd(0)
+    return df.apply(pd.to_numeric, errors="coerce")
+
+
+def load_french_factors(refresh=False):
+    """
+    八个美股因子的月度收益（小数）：Mkt-RF、SMB、HML、RMW、CMA、Mom、ST_Rev、LT_Rev。
+    下载 Kenneth French 数据库的 CSV 压缩包，缓存为 data/cache/french_factors.csv。
+    """
+    import io
+    import zipfile
+
+    import requests
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    path = CACHE_DIR / "french_factors.csv"
+    if path.exists() and not refresh:
+        return pd.read_csv(path, index_col=0, parse_dates=True)
+    parts = []
+    for name, cols in FRENCH_FILES.items():
+        raw = requests.get(_FRENCH.format(name), timeout=60).content
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            text = z.read(z.namelist()[0]).decode("latin-1")
+        df = _parse_french_monthly(text)
+        df.columns = [c.replace("Mom   ", "Mom").strip() for c in df.columns]
+        rename = {df.columns[i]: cols[i] for i in range(len(cols))} if name != "F-F_Research_Data_5_Factors_2x3" else {}
+        df = df.rename(columns=rename)
+        parts.append(df[cols])
+    out = (pd.concat(parts, axis=1) / 100).dropna()
+    out.to_csv(path)
+    return out

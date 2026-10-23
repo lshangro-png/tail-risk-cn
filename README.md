@@ -19,12 +19,13 @@
 | [`studies/05_tail_hierarchical_allocation/`](studies/05_tail_hierarchical_allocation/) | 基于尾部相关的分层聚类配置（源自整理稿记载的东北证券方法，未取得原文） | ✅ | **尾部相关在聚类、合成、配置上都无增量** |
 | [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）尾部风险最小化配置（KDE + Cholesky 模拟） | ✅ | **2006–2017 基本复现；递推式有缺陷但影响小；发表后明显变差** |
 | [`studies/07_tail_risk_parity/`](studies/07_tail_risk_parity/) | 尾部风险平价（历史 / GARCH 条件 ETL） | ✅ | **略优于风险平价但不显著；改进主要来自波动率调整而非 ES** |
+| [`studies/08_lee_factor_crowding/`](studies/08_lee_factor_crowding/) | Lee（2025）因子拥挤度与尾部风险（美股 8 因子） | ✅ | **统计结果可复现；「拥挤预示崩盘」来自时间错位与阈值失效，控制波动率后无预测力** |
 
 ## 目录结构
 
 ```
 tailrisk/          核心库
-  data.py            取数（中债官网 / AkShare / 聚宽）、缓存、同花顺导出解析、质量体检
+  data.py            取数（中债官网 / AkShare / FRED / Kenneth French / 聚宽）、缓存、同花顺导出解析、质量体检
   marginals.py       边缘分布与 PIT、单资产 ES（历史法 / GPD）
   riskmodels.py      单资产 VaR/ES 滚动预测（历史、正态、t、GPD、GARCH-FHS、GARCH-EVT）与回测
   copula.py          Clayton / Gumbel / Gaussian、滚动尾部相关、噪声基准
@@ -34,6 +35,7 @@ tailrisk/          核心库
   simulation.py      KDE 边缘 + 三种注入相关的方法（国泰君安递推、高斯 Copula、Iman-Conover）
   signals.py         趋势、预警状态机、事件核对
   warning.py         单资产尾部预警：滚动分位、PcaScore、事件研究、安慰剂、去掉单次事件
+  crowding.py        因子拥挤度：滚动夏普、衰减曲线拟合、拥挤残差、崩盘列联表、纯随机对照
   backtest.py        日频回测、风险平价、绩效统计
 studies/           各篇复现，每篇一个目录（notebook + README）
 tests/             回归测试
