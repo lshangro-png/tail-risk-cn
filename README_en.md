@@ -6,7 +6,9 @@ This project replicates sell-side research on tail-risk measurement, allocation 
 (CICC, Guotai Junan, Industrial Securities, Northeast Securities, and AllianceBernstein's tail risk parity, and Lee 2025 on factor crowding).
 For each study it asks the same question: **does the method pick up a real signal, or noise?**
 
-All studies share one library, `tailrisk/`. Each study lives in its own folder under `studies/`. The folder's README
+The project is notebooks only. `00_data.ipynb` downloads all market data into a local SQLite database, and
+`01_methods.ipynb` holds every shared function. Each study lives in its own folder under `studies/`; its first cell runs
+`%run ../../01_methods.ipynb` and reads data from the database. The folder's README
 follows a fixed template: original claim → differences in setup → replication results → verdict.
 The notebooks and study READMEs are written in Chinese.
 
@@ -27,9 +29,9 @@ The notebooks and study READMEs are written in Chinese.
 
 1. **Noise baselines must match the correlation level.** With 60-day windows, single-parameter Clayton/Gumbel tail coefficients
    are driven almost entirely by the ordinary correlation inside the window. Benchmark them against a Gaussian copula with the
-   same correlation and zero tail dependence (`copula.expected_under_gaussian`), not against independence.
+   same correlation and zero tail dependence (`expected_under_gaussian`), not against independence.
 2. **Test tail dependence with models that have separate tail parameters**: t-copula vs. Gaussian likelihood-ratio tests
-   (`elliptical.t_vs_gaussian`) and the SJC copula (`sjc.asymmetry_test`).
+   (`t_vs_gaussian`) and the SJC copula (`asymmetry_test`).
    On CSI 300 × ChinaBond, there is no evidence that joint crashes are stronger than joint rallies.
 3. **What actually helps is tracking current volatility and monitoring correlation.** Replacing volatility with ES, or
    correlation with tail dependence, adds little on these data.
@@ -39,33 +41,37 @@ The notebooks and study READMEs are written in Chinese.
 ## Layout
 
 ```
-tailrisk/          shared library
-  data.py            data sources (ChinaBond, AkShare, FRED, Kenneth French, JoinQuant), caching, quality checks
-  marginals.py       PIT; historical and GPD expected shortfall
-  riskmodels.py      rolling VaR/ES (HS, normal, t, GPD, GARCH-FHS, GARCH-EVT); Kupiec, Christoffersen, Acerbi–Szekely tests
-  copula.py          Clayton / Gumbel / Gaussian, rolling tail dependence, noise baselines
-  elliptical.py      t-copula vs. Gaussian LR test
-  sjc.py             symmetrised Joe-Clayton copula, asymmetry test
-  allocation.py      HRP, min-variance, min-CVaR, risk parity and ES parity (convex risk budgeting), backtests
-  simulation.py      KDE marginals with three dependence schemes (GTJA recursion, Gaussian copula, Iman-Conover)
-  signals.py         trend, warning state machine
-  warning.py         single-asset warnings, event studies, placebo and leave-one-episode-out tests
-  crowding.py        factor crowding: rolling Sharpe, decay fits, crowding residuals, crash tables, pure-noise null
-  backtest.py        daily backtests and performance statistics
+00_data.ipynb      data download (ChinaBond, AkShare, FRED, Kenneth French) → data/tailrisk.db
+01_methods.ipynb   shared methods in numbered sections, with regression self-tests at the end:
+                     0  database readers, data quality checks
+                     1  PIT; historical and GPD expected shortfall
+                     2  Clayton / Gumbel / Gaussian, rolling tail dependence, noise baselines
+                     3  t-copula vs. Gaussian LR test
+                     4  symmetrised Joe-Clayton copula, asymmetry test
+                     5  trend, warning state machine
+                     6  daily backtests and performance statistics
+                     7  HRP, min-variance, min-CVaR, risk parity and ES parity (convex risk budgeting), backtests
+                     8  KDE marginals with three dependence schemes (GTJA recursion, Gaussian copula, Iman-Conover)
+                     9  rolling VaR/ES (HS, normal, t, GPD, GARCH-FHS, GARCH-EVT); Kupiec, Christoffersen, Acerbi–Szekely tests
+                    10  single-asset warnings, event studies, placebo and leave-one-episode-out tests
+                    11  factor crowding: rolling Sharpe, decay fits, crowding residuals, crash tables, pure-noise null
 studies/           one folder per study (notebook + README)
-tests/             regression tests
+data/tailrisk.db   local SQLite database (not committed)
 ```
 
 ## Quick start
 
 ```bash
-pip install -e ".[dev]"
-pytest -q
-jupyter notebook studies/01_single_asset_tail/single_asset_tail.ipynb
+pip install -r requirements.txt
+jupyter notebook
 ```
 
-Data is downloaded on first use and cached in `data/cache/`. All default sources are free and need no account:
-ChinaBond, AkShare (Sina, Tencent and Eastmoney), FRED and the Kenneth French Data Library.
+1. Run `00_data.ipynb` once to fill `data/tailrisk.db`. Series already in the database are skipped; set `REFRESH = True` to re-download everything.
+2. Open any study notebook and run it top to bottom.
+3. After changing a method, run `01_methods.ipynb` directly; its last section runs the regression self-tests.
+
+All default sources are free and need no account: ChinaBond, AkShare (Sina, Tencent and Eastmoney), FRED and the
+Kenneth French Data Library.
 **No data is committed**: vendor data (ChinaBond, Wind, JoinQuant) may not be redistributed, so the repository only contains
 the code that fetches it.
 

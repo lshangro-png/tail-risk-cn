@@ -1,18 +1,14 @@
 # Python
 __pycache__/
 *.pyc
-.pytest_cache/
-*.egg-info/
 .ipynb_checkpoints/
 
 # 凭据与令牌 —— 绝不入库
 credentials.py
 *token*.json
 
-# 数据：聚宽/万得/中债等数据不得再分发，只提交取数代码
-data/cache/
-cache/
-*.parquet
+# 数据（含 SQLite 数据库）：聚宽/万得/中债等数据不得再分发，只提交取数代码
+data/
 
 # 本地探索残留
 未命名文件夹/

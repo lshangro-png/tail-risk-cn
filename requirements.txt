@@ -1,0 +1,10 @@
+numpy
+pandas>=2.0
+scipy
+matplotlib
+statsmodels
+requests
+akshare
+arch
+cvxpy
+jupyter
