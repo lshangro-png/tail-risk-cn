@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{GARCH(1,1)（标准化 $t_5$ 新息）1{,}000 次模拟中 97.5\% ES 回测的拒绝率。“规则”：$Z_2<-0.70$。“检验”：基于 $S$ 的 5\% 单侧渐近检验。}
+\label{tab:z2mc}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{$T=250$} & \multicolumn{2}{c}{$T=5000$} \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+预测 & 规则 & 检验 & 规则 & 检验 \\
+\midrule
+正确模型 & 5.3\% & 1.7\% & 0.0\% & 4.3\% \\
+正态尾部、波动率正确 & 15.7\% & 4.5\% & 0.0\% & 61.5\% \\
+VaR 与 ES 均乘以 0.85 & 44.5\% & 25.3\% & 37.0\% & 100.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}

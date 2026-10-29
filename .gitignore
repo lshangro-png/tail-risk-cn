@@ -19,6 +19,7 @@ data/
 *.pdf
 *.docx
 !paper/research_note.pdf
+!paper/research_note_zh.pdf
 
 # LaTeX 中间文件
 *.aux
@@ -26,3 +27,4 @@ data/
 *.out
 *.synctex.gz
 !paper/figures/*.pdf
+!paper/figures/zh/*.pdf

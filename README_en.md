@@ -17,7 +17,8 @@ The notebooks and study READMEs are written in Chinese.
 [`paper/research_note.pdf`](paper/research_note.pdf) (10 pages): *Do Tail-Risk Models Add Value Beyond Volatility and Correlation?
 Evidence from Multi-Asset Markets*. It combines the two strongest lines of this project: tail dependence tested against a
 correlation-matched Gaussian-copula null (including a new six-asset weekly panel), and a decomposition of tail risk parity into
-the ES effect and the GARCH-conditioning effect, net of realised turnover and transaction costs. All numbers and figures are produced
+the ES effect and the GARCH-conditioning effect, net of realised turnover and transaction costs. A Chinese translation is in
+[`paper/research_note_zh.pdf`](paper/research_note_zh.pdf) (compiled with xelatex). All numbers and figures, in both languages, are produced
 from the database by [`paper/research_note.ipynb`](paper/research_note.ipynb). It is a research note and has not been peer reviewed.
 
 ## Studies

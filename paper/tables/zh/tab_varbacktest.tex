@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{七个资产的一日 VaR/ES 回测（滚动 1{,}000 日窗口）。第 3--6 列为 7 个资产中该检验在 5\% 水平下不拒绝的个数。“旧规则”：$Z_2>-0.70$。“校准检验”：自归一化统计量 $S$ 的单侧 wild bootstrap $p$ 值。最后一列：在 97.5\% VaR 突破日上，平均实际损失与平均预测 ES 之比，取各资产的中位数。}
+\label{tab:var}
+\small
+\resizebox{\linewidth}{!}{\begin{tabular}{lrrrrrr}
+\toprule
+方法 & 99\% VaR 突破率 & Kupiec & Christoffersen & $Z_2$ 旧规则 & $Z_2$ 校准检验 & 损失/ES \\
+\midrule
+历史模拟 & 1.22\% & 5/7 & 1/7 & 7/7 & 4/7 & 1.03 \\
+正态 & 1.83\% & 0/7 & 0/7 & 6/7 & 0/7 & 1.27 \\
+Student-$t$ & 1.13\% & 3/7 & 1/7 & 7/7 & 2/7 & 1.00 \\
+GPD（POT） & 1.12\% & 5/7 & 1/7 & 7/7 & 4/7 & 1.03 \\
+GARCH-FHS & 1.07\% & 7/7 & 5/7 & 7/7 & 7/7 & 1.03 \\
+GARCH-EVT & 0.97\% & 7/7 & 6/7 & 7/7 & 7/7 & 1.03 \\
+\bottomrule
+\end{tabular}}
+\end{table}

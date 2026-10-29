@@ -14,7 +14,8 @@
 [`paper/research_note.pdf`](paper/research_note.pdf)（英文，10 页）：*Do Tail-Risk Models Add Value Beyond Volatility and Correlation? Evidence from Multi-Asset Markets*。
 把两条最强的研究线合并成一个问题：尾部风险方法能否在当前波动率和相关性之外提供增量信息。
 检验一是相关强度匹配的高斯 Copula 零假设下的尾部依赖（含新增的 6 资产周度面板），检验二是尾部风险平价的分解（ES 与 GARCH 条件化各自的贡献，计入实际换手与交易成本）。
-数字与图表由 [`paper/research_note.ipynb`](paper/research_note.ipynb) 从数据库生成。这是研究笔记，未经同行评审。
+中文译本：[`paper/research_note_zh.pdf`](paper/research_note_zh.pdf)（《尾部风险模型能否提供波动率与相关性之外的信息？》，用 xelatex 编译）。
+数字与图表（中英文两套）由 [`paper/research_note.ipynb`](paper/research_note.ipynb) 从数据库生成。这是研究笔记，未经同行评审。
 
 ## 研究进度
 
