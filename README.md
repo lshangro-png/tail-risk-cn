@@ -9,17 +9,24 @@
 每篇研究放在 `studies/` 下的独立目录，第一格用 `%run ../../01_methods.ipynb` 引入方法、从数据库读数据。
 目录里的 README 按固定格式写明：原文结论 → 口径差异 → 复现结果 → 判定。
 
+## Research note
+
+[`paper/research_note.pdf`](paper/research_note.pdf)（英文，10 页）：*Do Tail-Risk Models Add Value Beyond Volatility and Correlation? Evidence from Multi-Asset Markets*。
+把两条最强的研究线合并成一个问题：尾部风险方法能否在当前波动率和相关性之外提供增量信息。
+检验一是相关强度匹配的高斯 Copula 零假设下的尾部依赖（含新增的 6 资产周度面板），检验二是尾部风险平价的分解（ES 与 GARCH 条件化各自的贡献，计入实际换手与交易成本）。
+数字与图表由 [`paper/research_note.ipynb`](paper/research_note.ipynb) 从数据库生成。这是研究笔记，未经同行评审。
+
 ## 研究进度
 
 | 目录 | 研究 | 状态 | 判定 |
 |---|---|---|---|
-| [`studies/01_single_asset_tail/`](studies/01_single_asset_tail/) | 单资产肥尾的事实；六种 VaR/ES 估计方法的回测 | ✅ | **整理稿的肥尾事实成立；GARCH-EVT 最可靠，正态不可用** |
+| [`studies/01_single_asset_tail/`](studies/01_single_asset_tail/) | 单资产肥尾的事实；六种 VaR/ES 估计方法的回测 | ✅ | **整理稿的肥尾事实成立；GARCH-EVT 最可靠，正态不可用；Z2 的 −0.70 阈值在长样本中失效，改按样本计算 p 值** |
 | [`studies/02_tail_dependence/`](studies/02_tail_dependence/) | 尾部相关性：数据、PIT、Copula、噪声基准 | ✅ | 方法基础设施 |
 | [`studies/03_cicc_stock_bond_warning/`](studies/03_cicc_stock_bond_warning/) | 中金（2021）股债双杀预警 | ✅ 股债 + 股债金多资产 + 延伸检验（相关系数对照、样本外、t、SJC） | **部分复现，核心证据不成立**（样本外同样不成立） |
 | [`studies/04_cib_single_asset_warning/`](studies/04_cib_single_asset_warning/) | 兴业（2025）单资产尾部预警 | ✅ | **大部分可复现；效果几乎都来自单次危机；黄金信号有前视** |
 | [`studies/05_tail_hierarchical_allocation/`](studies/05_tail_hierarchical_allocation/) | 基于尾部相关的分层聚类配置（源自整理稿记载的东北证券方法，未取得原文） | ✅ | **尾部相关在聚类、合成、配置上都无增量** |
 | [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）尾部风险最小化配置（KDE + Cholesky 模拟） | ✅ | **2006–2017 基本复现；递推式有缺陷但影响小；发表后明显变差** |
-| [`studies/07_tail_risk_parity/`](studies/07_tail_risk_parity/) | 尾部风险平价（历史 / GARCH 条件 ETL） | ✅ | **略优于风险平价但不显著；改进主要来自波动率调整而非 ES** |
+| [`studies/07_tail_risk_parity/`](studies/07_tail_risk_parity/) | 尾部风险平价（历史 / GARCH 条件 ETL） | ✅ | **略优于风险平价但不显著；改进来自波动率调整而非 ES，且计入 25bp 以上交易成本后消失** |
 | [`studies/08_lee_factor_crowding/`](studies/08_lee_factor_crowding/) | Lee（2025）因子拥挤度与尾部风险（美股 8 因子） | ✅ | **统计结果可复现；「拥挤预示崩盘」来自时间错位与阈值失效，控制波动率后无预测力** |
 
 ## 目录结构
@@ -40,6 +47,7 @@
                     10  单资产尾部预警：滚动分位、PcaScore、事件研究、安慰剂、去掉单次事件
                     11  因子拥挤度：滚动夏普、衰减曲线拟合、拥挤残差、崩盘列联表、纯随机对照
 studies/           各篇复现，每篇一个目录（notebook + README）
+paper/             Research note：LaTeX 源文件、生成表格与图的 notebook、PDF
 data/tailrisk.db   本地 SQLite 数据库（不入库）
 ```
 

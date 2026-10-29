@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Multi-asset panel (6 assets, 15 pairs, 7 non-overlapping three-year blocks of weekly returns, 105 pair-blocks) against the correlation-matched Gaussian-copula null (200 simulations). $p$: one-sided simulated $p$-value (large values of the statistic). Volatility-scaled: returns divided by trailing 26-week volatility.}
+\label{tab:panel}
+\small
+\resizebox{\linewidth}{!}{\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{Raw weekly returns} & \multicolumn{3}{c}{Volatility-scaled} \\ \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Statistic & Obs. & Null mean [5\%, 95\%] & $p$ & Obs. & Null mean & $p$ \\
+\midrule
+\# $t$ vs Gaussian rejections (5\%) & 31 & 6 [1, 10] & 0.005 & 31 & 6 & 0.005 \\
+Mean $t$-implied $\lambda$ & 0.063 & 0.018 [0.010, 0.028] & 0.005 & 0.064 & 0.018 & 0.005 \\
+Joint lower-decile weeks & 302 & 235 [212, 257] & 0.005 & 299 & 226 & 0.005 \\
+Joint upper-decile weeks & 251 & 231 [207, 257] & 0.104 & 226 & 224 & 0.438 \\
+Lower $-$ upper & 51 & 4 [-25, 32] & 0.015 & 73 & 3 & 0.005 \\
+Mean SJC $\hat\tau_L-\hat\tau_U$ & 0.049 & 0.000 [-0.016, 0.018] & 0.005 & 0.055 & 0.001 & 0.005 \\
+\# SJC asymmetry rejections (5\%) & 8 & 2 [0, 5] & 0.005 & 7 & 2 & 0.010 \\
+Mean Clayton $\hat\lambda_L$ & 0.096 & 0.082 [0.073, 0.093] & 0.015 & 0.094 & 0.079 & 0.020 \\
+Spearman($\hat\lambda_L,\rho$) & 0.94 & 0.94 [0.92, 0.96] & 0.512 & 0.94 & 0.94 & 0.413 \\
+\bottomrule
+\end{tabular}}
+\end{table}

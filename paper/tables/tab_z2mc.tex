@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Rejection rates of the 97.5\% ES backtest in 1{,}000 simulations of a GARCH(1,1) with standardised $t_5$ innovations. ``Rule'': $Z_2<-0.70$. ``Test'': one-sided asymptotic test on $S$ at 5\%.}
+\label{tab:z2mc}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{$T=250$} & \multicolumn{2}{c}{$T=5000$} \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Forecast & Rule & Test & Rule & Test \\
+\midrule
+Correct model & 5.3\% & 1.7\% & 0.0\% & 4.3\% \\
+Gaussian tail, correct volatility & 15.7\% & 4.5\% & 0.0\% & 61.5\% \\
+VaR and ES scaled by 0.85 & 44.5\% & 25.3\% & 37.0\% & 100.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}

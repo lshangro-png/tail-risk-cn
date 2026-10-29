@@ -18,3 +18,11 @@ data/
 # 研报原文与个人整理稿（版权 / 私人笔记，不入库）
 *.pdf
 *.docx
+!paper/research_note.pdf
+
+# LaTeX 中间文件
+*.aux
+*.log
+*.out
+*.synctex.gz
+!paper/figures/*.pdf

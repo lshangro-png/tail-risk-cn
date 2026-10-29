@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{One-day-ahead VaR/ES backtests on seven assets (rolling 1{,}000-day windows). Columns 3--6 count the assets (of 7) for which the test does not reject at 5\%. ``Old rule'': $Z_2>-0.70$. ``Calibrated'': one-sided wild-bootstrap $p$-value of the self-normalised statistic $S$. Last column: median over assets of mean realised loss over mean forecast ES on 97.5\% VaR violation days.}
+\label{tab:var}
+\small
+\resizebox{\linewidth}{!}{\begin{tabular}{lrrrrrr}
+\toprule
+Method & 99\% VaR hit rate & Kupiec & Christoffersen & $Z_2$ old rule & $Z_2$ calibrated & Loss/ES \\
+\midrule
+Historical simulation & 1.22\% & 5/7 & 1/7 & 7/7 & 4/7 & 1.03 \\
+Gaussian & 1.83\% & 0/7 & 0/7 & 6/7 & 0/7 & 1.27 \\
+Student-$t$ & 1.13\% & 3/7 & 1/7 & 7/7 & 2/7 & 1.00 \\
+GPD (POT) & 1.12\% & 5/7 & 1/7 & 7/7 & 4/7 & 1.03 \\
+GARCH-FHS & 1.07\% & 7/7 & 5/7 & 7/7 & 7/7 & 1.03 \\
+GARCH-EVT & 0.97\% & 7/7 & 6/7 & 7/7 & 7/7 & 1.03 \\
+\bottomrule
+\end{tabular}}
+\end{table}

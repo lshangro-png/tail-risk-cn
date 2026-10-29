@@ -12,17 +12,25 @@ The project is notebooks only. `00_data.ipynb` downloads all market data into a 
 follows a fixed template: original claim → differences in setup → replication results → verdict.
 The notebooks and study READMEs are written in Chinese.
 
+## Research note
+
+[`paper/research_note.pdf`](paper/research_note.pdf) (10 pages): *Do Tail-Risk Models Add Value Beyond Volatility and Correlation?
+Evidence from Multi-Asset Markets*. It combines the two strongest lines of this project: tail dependence tested against a
+correlation-matched Gaussian-copula null (including a new six-asset weekly panel), and a decomposition of tail risk parity into
+the ES effect and the GARCH-conditioning effect, net of realised turnover and transaction costs. All numbers and figures are produced
+from the database by [`paper/research_note.ipynb`](paper/research_note.ipynb). It is a research note and has not been peer reviewed.
+
 ## Studies
 
 | Folder | Study | Verdict |
 |---|---|---|
-| [`01_single_asset_tail`](studies/01_single_asset_tail/) | Fat-tail facts; rolling out-of-sample backtests of six VaR/ES estimators on 7 assets | Fat-tail facts hold. **GARCH-EVT** (McNeil & Frey 2000) is the most reliable; the normal model underestimates ES by about 27% |
+| [`01_single_asset_tail`](studies/01_single_asset_tail/) | Fat-tail facts; rolling out-of-sample backtests of six VaR/ES estimators on 7 assets | Fat-tail facts hold. **GARCH-EVT** (McNeil & Frey 2000) is the most reliable; the normal model underestimates ES by about 27%. The usual $Z_2<-0.70$ ES threshold (calibrated for 250 days) almost never rejects in multi-thousand-day backtests, so ES is tested with a self-normalised statistic and wild-bootstrap $p$-values |
 | [`02_tail_dependence`](studies/02_tail_dependence/) | Infrastructure: data, PIT, copulas, noise baselines | — |
 | [`03_cicc_stock_bond_warning`](studies/03_cicc_stock_bond_warning/) | CICC (2021): stock-bond "double-kill" warning from rolling Clayton/Gumbel tail dependence; stock/bond/gold extension | The computation replicates (3 of 5 warnings within ±1 day), but the **core evidence does not**. λ is essentially a monotone function of the rolling correlation (AUC 0.95). The multi-asset result rests almost entirely on 2008. The signal also fails out of sample |
 | [`04_cib_single_asset_warning`](studies/04_cib_single_asset_warning/) | Industrial Securities (2025): single-asset tail warnings (VIX, real yields, OVX, PCA herding) | 6 of 7 assets replicate, but **each effect hinges on a single crisis**. Dropping the largest episode removes it (2015, 2020-03 or 2022). The gold signal has look-ahead bias from US/Asia close timing |
 | [`05_tail_hierarchical_allocation`](studies/05_tail_hierarchical_allocation/) | Hierarchical clustering on lower-tail dependence (method as described for Northeast Securities; original not available) | Tail dependence adds **nothing** over plain correlation in clustering, risk aggregation or out-of-sample allocation |
 | [`06_gtja_kde_simulation`](studies/06_gtja_kde_simulation/) | Guotai Junan (2018): KDE simulation and minimisation of an inner-/end-of-horizon risk measure | 2006–2017 results largely replicate. The Cholesky recursion distorts variances and marginals and depends on asset ordering, but has little effect on results here. Performance deteriorates after publication |
-| [`07_tail_risk_parity`](studies/07_tail_risk_parity/) | Tail risk parity (ES-budgeting) vs. risk parity | Slightly better but not significant. **The gain comes from GARCH volatility scaling, not from using ES** |
+| [`07_tail_risk_parity`](studies/07_tail_risk_parity/) | Tail risk parity (ES-budgeting) vs. risk parity | Slightly better but not significant. **The gain comes from GARCH volatility scaling, not from using ES**, and it disappears once trading costs of 25 bp or more are charged on realised turnover |
 | [`08_lee_factor_crowding`](studies/08_lee_factor_crowding/) | Lee (2025, arXiv 2512.11913 v1): factor crowding, hyperbolic alpha decay and crash risk on 8 US factors | The statistics replicate (momentum R² 0.64 vs 0.65), but **"crowding predicts crashes" does not hold**. The same-month effect is a timing artifact (pure-noise data give a ratio of about 1.8). Momentum's 0.38 comes from a stale threshold (279 of 288 test months are "crowded"). After controlling for volatility, crowding has no predictive power. These findings agree with the author's own v3 revision |
 
 ## Cross-cutting findings
@@ -56,6 +64,7 @@ The notebooks and study READMEs are written in Chinese.
                     10  single-asset warnings, event studies, placebo and leave-one-episode-out tests
                     11  factor crowding: rolling Sharpe, decay fits, crowding residuals, crash tables, pure-noise null
 studies/           one folder per study (notebook + README)
+paper/             research note: LaTeX source, notebook that builds its tables and figures, PDF
 data/tailrisk.db   local SQLite database (not committed)
 ```
 
