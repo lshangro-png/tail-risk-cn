@@ -29,7 +29,7 @@
 | [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）尾部风险最小化配置（KDE + Cholesky 模拟） | ✅ | **2006–2017 基本复现；递推式有缺陷但影响小；发表后明显变差** |
 | [`studies/07_tail_risk_parity/`](studies/07_tail_risk_parity/) | 尾部风险平价（历史 / GARCH 条件 ETL） | ✅ | **略优于风险平价但不显著；改进来自波动率调整而非 ES，且计入 25bp 以上交易成本后消失** |
 | [`studies/08_lee_factor_crowding/`](studies/08_lee_factor_crowding/) | Lee（2025）因子拥挤度与尾部风险（美股 8 因子） | ✅ | **统计结果可复现；「拥挤预示崩盘」来自时间错位与阈值失效，控制波动率后无预测力** |
-| [`studies/09_estimation_vs_decision/`](studies/09_estimation_vs_decision/) | 估计精度与决策质量：真实分布已知的模拟（由 01、07 篇引出，非复现） | ✅ | **更准的风险估计不一定带来更好的决策：决定决策的是改变组合排序的「形状」误差；ES 平价比 min ES 需要约 2 倍的数据；条件化的净收益在 10–15bp 成本时归零，保守的部分调整比更准的估计更有用** |
+| [`studies/09_estimation_vs_decision/`](studies/09_estimation_vs_decision/) | 估计精度与决策质量：真实分布已知的模拟 + 07 篇真实数据检验（由 01、07 篇引出，非复现） | ✅ | **更准的风险估计不一定带来更好的决策：决定决策的是改变组合排序的「形状」误差；ES 平价比 min ES 需要约 2 倍的数据；条件化的净收益在 10–15bp 成本时归零，保守的部分调整比更准的估计更有用；在 07 篇的真实数据上，部分调整（换手 95%→25%）在 10bp 以上的成本下夏普最高** |
 
 ## 目录结构
 
