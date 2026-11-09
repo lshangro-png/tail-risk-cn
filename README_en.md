@@ -33,6 +33,7 @@ from the database by [`paper/research_note.ipynb`](paper/research_note.ipynb). I
 | [`06_gtja_kde_simulation`](studies/06_gtja_kde_simulation/) | Guotai Junan (2018): KDE simulation and minimisation of an inner-/end-of-horizon risk measure | 2006–2017 results largely replicate. The Cholesky recursion distorts variances and marginals and depends on asset ordering, but has little effect on results here. Performance deteriorates after publication |
 | [`07_tail_risk_parity`](studies/07_tail_risk_parity/) | Tail risk parity (ES-budgeting) vs. risk parity | Slightly better but not significant. **The gain comes from GARCH volatility scaling, not from using ES**, and it disappears once trading costs of 25 bp or more are charged on realised turnover |
 | [`08_lee_factor_crowding`](studies/08_lee_factor_crowding/) | Lee (2025, arXiv 2512.11913 v1): factor crowding, hyperbolic alpha decay and crash risk on 8 US factors | The statistics replicate (momentum R² 0.64 vs 0.65), but **"crowding predicts crashes" does not hold**. The same-month effect is a timing artifact (pure-noise data give a ratio of about 1.8). Momentum's 0.38 comes from a stale threshold (279 of 288 test months are "crowded"). After controlling for volatility, crowding has no predictive power. These findings agree with the author's own v3 revision |
+| [`09_estimation_vs_decision`](studies/09_estimation_vs_decision/) | Estimation accuracy vs. decision quality: a simulation with known truth (follows from 01 and 07; not a replication) | **More accurate risk estimates do not imply better decisions.** What matters is the part of the error that changes the ranking of portfolios ("shape"), not its level: under t(4) the Gaussian plug-in misstates ES by ~9% yet gives 2–3× lower decision regret. ES parity needs about twice the data that min-ES does to beat its covariance plug-in. GARCH conditioning makes forecasts much sharper, but its net decision value is gone at 10–15 bp; a conservative partial-adjustment rule beats both full re-optimisation and a one-period oracle once costs are charged |
 
 ## Cross-cutting findings
 
@@ -46,6 +47,8 @@ from the database by [`paper/research_note.ipynb`](paper/research_note.ipynb). I
    correlation with tail dependence, adds little on these data.
 4. **Count independent episodes.** Daily-averaged event studies often rest on one or two crises.
 5. **Align time zones.** US data released after the Asian close must be lagged one day when it is used to signal Asian assets.
+6. **Judge risk models by the decisions they produce, not by forecast accuracy alone.** In simulations with known truth (study 09), the
+   estimator with the smaller ES error often gives the worse portfolio, and the value of conditioning depends on turnover and costs.
 
 ## Layout
 
@@ -64,7 +67,7 @@ from the database by [`paper/research_note.ipynb`](paper/research_note.ipynb). I
                      9  rolling VaR/ES (HS, normal, t, GPD, GARCH-FHS, GARCH-EVT); Kupiec, Christoffersen, Acerbi–Szekely tests
                     10  single-asset warnings, event studies, placebo and leave-one-episode-out tests
                     11  factor crowding: rolling Sharpe, decay fits, crowding residuals, crash tables, pure-noise null
-studies/           one folder per study (notebook + README)
+studies/           one folder per study, replications and extensions (notebook + README)
 paper/             research note: LaTeX source, notebook that builds its tables and figures, PDF
 data/tailrisk.db   local SQLite database (not committed)
 ```
