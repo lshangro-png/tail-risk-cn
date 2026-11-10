@@ -29,6 +29,7 @@
 | [`studies/06_gtja_kde_simulation/`](studies/06_gtja_kde_simulation/) | 国泰君安（2018）尾部风险最小化配置（KDE + Cholesky 模拟） | ✅ | **2006–2017 基本复现；递推式有缺陷但影响小；发表后明显变差** |
 | [`studies/07_tail_risk_parity/`](studies/07_tail_risk_parity/) | 尾部风险平价（历史 / GARCH 条件 ETL） | ✅ | **略优于风险平价但不显著；改进来自波动率调整而非 ES，且计入 25bp 以上交易成本后消失** |
 | [`studies/08_lee_factor_crowding/`](studies/08_lee_factor_crowding/) | Lee（2025）因子拥挤度与尾部风险（美股 8 因子） | ✅ | **统计结果可复现；「拥挤预示崩盘」来自时间错位与阈值失效，控制波动率后无预测力** |
+| [`studies/09_estimation_vs_decision/`](studies/09_estimation_vs_decision/) | 估计精度与决策质量：真实分布已知的模拟 + 07 篇真实数据检验（由 01、07 篇引出，非复现） | ✅ | **更准的风险估计不一定带来更好的决策：决定决策的是改变组合排序的「形状」误差；ES 平价比 min ES 需要约 2 倍的数据；条件化的净收益在 10–15bp 成本时归零，保守的部分调整比更准的估计更有用；在 07 篇的真实数据上，部分调整（换手 95%→25%）在 10bp 以上的成本下夏普最高** |
 
 ## 目录结构
 
@@ -47,7 +48,7 @@
                      9  单资产 VaR/ES 滚动预测（历史、正态、t、GPD、GARCH-FHS、GARCH-EVT）与回测
                     10  单资产尾部预警：滚动分位、PcaScore、事件研究、安慰剂、去掉单次事件
                     11  因子拥挤度：滚动夏普、衰减曲线拟合、拥挤残差、崩盘列联表、纯随机对照
-studies/           各篇复现，每篇一个目录（notebook + README）
+studies/           各篇复现与延伸研究，每篇一个目录（notebook + README）
 paper/             Research note：LaTeX 源文件、生成表格与图的 notebook、PDF
 data/tailrisk.db   本地 SQLite 数据库（不入库）
 ```
