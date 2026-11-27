@@ -20,6 +20,7 @@ data/
 *.docx
 !paper/research_note.pdf
 !paper/research_note_zh.pdf
+!paper/estimation_note.pdf
 
 # LaTeX 中间文件
 *.aux

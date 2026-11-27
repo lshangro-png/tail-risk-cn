@@ -17,6 +17,11 @@
 中文译本：[`paper/research_note_zh.pdf`](paper/research_note_zh.pdf)（《尾部风险模型能否提供波动率与相关性之外的信息？》，用 xelatex 编译）。
 数字与图表（中英文两套）由 [`paper/research_note.ipynb`](paper/research_note.ipynb) 从数据库生成。这是研究笔记，未经同行评审。
 
+[`paper/estimation_note.pdf`](paper/estimation_note.pdf)（英文，10 页）：*Structural Estimation under Distributional Misspecification: Finite-Sample and Asymptotic Properties of Relative Tail-Risk Estimators*。
+由 09 篇引出：决策只依赖 ES 的相对大小，椭圆分布下 ES 之比只取决于协方差的形状，所以错设的分布仍可能无偏地估计它。
+比较样本协方差插件、Tyler 形状估计量与历史法三种 ES 比值估计量的一致性、渐近分布（含四阶矩不存在时的稳定极限）与有限样本表现，并说明椭圆结构不成立时的后果。
+正文逐条标明哪些结论引自文献、哪些是本文推导、哪些只是模拟证据。图表由 [`paper/estimation_note.ipynb`](paper/estimation_note.ipynb) 从 09 篇的缓存结果生成；理论附注的中文版见 09 篇目录。
+
 ## 研究进度
 
 | 目录 | 研究 | 状态 | 判定 |

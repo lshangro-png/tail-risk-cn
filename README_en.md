@@ -21,6 +21,14 @@ the ES effect and the GARCH-conditioning effect, net of realised turnover and tr
 [`paper/research_note_zh.pdf`](paper/research_note_zh.pdf) (compiled with xelatex). All numbers and figures, in both languages, are produced
 from the database by [`paper/research_note.ipynb`](paper/research_note.ipynb). It is a research note and has not been peer reviewed.
 
+[`paper/estimation_note.pdf`](paper/estimation_note.pdf) (10 pages): *Structural Estimation under Distributional Misspecification:
+Finite-Sample and Asymptotic Properties of Relative Tail-Risk Estimators*. It grows out of study 09: ES-based decisions depend only on
+relative ES, which under ellipticity is a function of the covariance shape, so a misspecified distribution can still estimate it without
+bias. The note compares the sample-covariance plug-in, Tyler's shape estimator and historical simulation as estimators of the ES ratio
+(consistency, asymptotic distributions including a stable limit when fourth moments do not exist, finite-sample behaviour) and shows what
+happens when the elliptical structure fails. It states which results are cited, which are derived, and which are simulation evidence only.
+Tables and figures are produced from study 09's cached results by [`paper/estimation_note.ipynb`](paper/estimation_note.ipynb).
+
 ## Studies
 
 | Folder | Study | Verdict |
