@@ -27,7 +27,8 @@ relative ES, which under ellipticity is a function of the covariance shape, so a
 bias. The note compares the sample-covariance plug-in, Tyler's shape estimator and historical simulation as estimators of the ES ratio
 (consistency, asymptotic distributions including a stable limit when fourth moments do not exist, finite-sample behaviour) and shows what
 happens when the elliptical structure fails. It states which results are cited, which are derived, and which are simulation evidence only.
-Tables and figures are produced from study 09's cached results by [`paper/estimation_note.ipynb`](paper/estimation_note.ipynb).
+Chinese translation: [`paper/estimation_note_zh.pdf`](paper/estimation_note_zh.pdf) (compiled with xelatex). Tables and figures, in both
+languages, are produced from study 09's cached results by [`paper/estimation_note.ipynb`](paper/estimation_note.ipynb).
 
 ## Studies
 
