@@ -1,0 +1,15 @@
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{RMSE（\%），$T=1000$} & \multicolumn{3}{c}{$T\cdot\mathrm{Var}$，$T=4000$} & \multicolumn{3}{c}{理论值} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+DGP & 高斯 & Tyler & HS & 高斯 & Tyler & HS & $V_G$ & $V_{\mathrm{Ty}}$ & $V_{HS}$ \\
+\midrule
+高斯 & \textbf{2.11} & 2.43 & 3.81 & 0.44 & 0.59 & 1.44 & 0.45 & 0.60 & 1.49 \\
+$t_{15}$ & \textbf{2.32} & 2.46 & 4.33 & 0.56 & 0.62 & 1.91 & 0.53 & 0.60 & 1.87 \\
+$t_8$ & 2.60 & \textbf{2.44} & 4.77 & 0.67 & 0.60 & 2.34 & 0.67 & 0.60 & 2.32 \\
+$t_5$ & 3.34 & \textbf{2.46} & 5.63 & 1.24 & 0.61 & 3.08 & 1.34 & 0.60 & 3.17 \\
+$t_4$ & 4.85 & \textbf{2.40} & 6.14 & 3.19 & 0.60 & 4.06 & $\infty$ & 0.60 & 3.96 \\
+$t_3$ & 10.69 & \textbf{2.45} & 7.83 & 13.59 & 0.61 & 6.35 & $\infty$ & 0.60 & 6.38 \\
+崩盘混合 & 12.18 & 26.72 & \textbf{8.32} & 5.56 & 1.07 & 6.78 & 5.74 & -- & 6.61 \\
+\bottomrule
+\end{tabular}
